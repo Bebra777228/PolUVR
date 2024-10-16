@@ -94,242 +94,224 @@ DEMUCS_MODELS = [
   'hdemucs_mmi.yaml',
 ]
 
+def initialize_separator(model_type, model_params):
+    return Separator(
+        model_file_dir=model_file_dir,
+        output_dir=output_dir,
+        output_format=output_format,
+        normalization_threshold=normalization_threshold,
+        amplification_threshold=amplification_threshold,
+        **model_params
+    )
 
 def roformer_separator(audio_path):
-  separator = Separator(
-    model_file_dir=model_file_dir,
-    output_dir=output_dir,
-    output_format=output_format,
-    normalization_threshold=normalization_threshold,
-    amplification_threshold=amplification_threshold,
-    mdxc_params={
-      "batch_size": roformer_batch_size,
-      "segment_size": roformer_segment_size,
-      "overlap": roformer_overlap,
-    }
-  )
-
-  roformer_separation = separator.separate(audio_path)
-  
-  stem1_file = roformer_separation[0]
-  stem2_file = roformer_separation[1]
-
-  return stem1_file, stem2_file
-
+    try:
+        separator = initialize_separator(
+            "roformer",
+            {
+                "mdxc_params": {
+                    "batch_size": roformer_batch_size,
+                    "segment_size": roformer_segment_size,
+                    "overlap": roformer_overlap,
+                }
+            }
+        )
+        roformer_separation = separator.separate(audio_path)
+        return roformer_separation[0], roformer_separation[1]
+    except Exception as e:
+        return str(e), str(e)
 
 def mdx23c_separator(audio_path):
-  separator = Separator(
-    model_file_dir=model_file_dir,
-    output_dir=output_dir,
-    output_format=output_format,
-    normalization_threshold=normalization_threshold,
-    amplification_threshold=amplification_threshold,
-    mdxc_params={
-      "batch_size": mdx23c_batch_size,
-      "segment_size": mdx23c_segment_size,
-      "overlap": mdx23c_overlap,
-    }
-  )
-
-  mdx23c_separation = separator.separate(audio_path)
-
-  stem1_file = mdxc_separation[0]
-  stem2_file = mdxc_separation[1]
-
-  return stem1_file, stem2_file
-
+    try:
+        separator = initialize_separator(
+            "mdx23c",
+            {
+                "mdxc_params": {
+                    "batch_size": mdx23c_batch_size,
+                    "segment_size": mdx23c_segment_size,
+                    "overlap": mdx23c_overlap,
+                }
+            }
+        )
+        mdx23c_separation = separator.separate(audio_path)
+        return mdx23c_separation[0], mdx23c_separation[1]
+    except Exception as e:
+        return str(e), str(e)
 
 def mdx_separator(audio_path):
-  separator = Separator(
-    model_file_dir=model_file_dir,
-    output_dir=output_dir,
-    output_format=output_format,
-    normalization_threshold=normalization_threshold,
-    amplification_threshold=amplification_threshold,
-    mdx_params={
-      "batch_size": mdx_batch_size,
-      "hop_length": mdx_hop_length,
-      "segment_size": mdx_segment_size,
-      "overlap": mdx_overlap,
-      "enable_denoise": mdx_denoise,
-    }
-  )
-
-  mdx_separation = separator.separate(audio_path)
-
-  stem1_file = mdxnet_separation[0]
-  stem2_file = mdxnet_separation[1]
-
-  return stem1_file, stem2_file
-
+    try:
+        separator = initialize_separator(
+            "mdx",
+            {
+                "mdx_params": {
+                    "batch_size": mdx_batch_size,
+                    "hop_length": mdx_hop_length,
+                    "segment_size": mdx_segment_size,
+                    "overlap": mdx_overlap,
+                    "enable_denoise": mdx_denoise,
+                }
+            }
+        )
+        mdx_separation = separator.separate(audio_path)
+        return mdx_separation[0], mdx_separation[1]
+    except Exception as e:
+        return str(e), str(e)
 
 def vr_separator(audio_path):
-  separator = Separator(
-    model_file_dir=model_file_dir,
-    output_dir=output_dir,
-    output_format=output_format,
-    normalization_threshold=normalization_threshold,
-    amplification_threshold=amplification_threshold,
-    vr_params={
-      "batch_size": vr_batch_size,
-      "window_size": vr_window_size,
-      "aggression": vr_aggression,
-      "enable_tta": vr_tta,
-      "enable_post_process": vr_post_process,
-      "post_process_threshold": vr_post_process_threshold,
-      "high_end_process": vr_high_end_process,
-    }
-  )
-
-  vr_separation = separator.separate(audio_path)
-
-  stem1_file = vrarch_separation[0]
-  stem2_file = vrarch_separation[1]
-
-  return stem1_file, stem2_file
-
+    try:
+        separator = initialize_separator(
+            "vr",
+            {
+                "vr_params": {
+                    "batch_size": vr_batch_size,
+                    "window_size": vr_window_size,
+                    "aggression": vr_aggression,
+                    "enable_tta": vr_tta,
+                    "enable_post_process": vr_post_process,
+                    "post_process_threshold": vr_post_process_threshold,
+                    "high_end_process": vr_high_end_process,
+                }
+            }
+        )
+        vr_separation = separator.separate(audio_path)
+        return vr_separation[0], vr_separation[1]
+    except Exception as e:
+        return str(e), str(e)
 
 def demucs_separator(audio_path):
-  separator = Separator(
-    model_file_dir=model_file_dir,
-    output_dir=output_dir,
-    output_format=output_format,
-    normalization_threshold=normalization_threshold,
-    amplification_threshold=amplification_threshold,
-    demucs_params={
-      "segment_size": demucs_segment_size,
-      "shifts": demucs_shifts,
-      "overlap": demucs_overlap,
-      "segments_enabled": demucs_segments_enabled,
-    }
-  )
-
-  demucs_separation = separator.separate(audio_path)
-
-  stem1_file = demucs_separation[0]
-  stem2_file = demucs_separation[1]
-  stem3_file = demucs_separation[2]
-  stem4_file = demucs_separation[3]
-
-  return stem1_file, stem2_file, stem3_file, stem4_file
-
+    try:
+        separator = initialize_separator(
+            "demucs",
+            {
+                "demucs_params": {
+                    "segment_size": demucs_segment_size,
+                    "shifts": demucs_shifts,
+                    "overlap": demucs_overlap,
+                    "segments_enabled": demucs_segments_enabled,
+                }
+            }
+        )
+        demucs_separation = separator.separate(audio_path)
+        return demucs_separation[0], demucs_separation[1], demucs_separation[2], demucs_separation[3]
+    except Exception as e:
+        return str(e), str(e), str(e), str(e)
 
 with gr.Blocks(title="🎵 Audio Separator 🎵", css="footer{display:none !important}") as app:
-    with gr.Accordion("General settings", open = False):
+    with gr.Accordion("General settings", open=False):
         with gr.Row():
-            model_file_dir = gr.Textbox(value = "/tmp/audio-separator-models/", label = "Model file directory", placeholder = "/tmp/audio-separator-models/")
+            model_file_dir = gr.Textbox(value="/tmp/audio-separator-models/", label="Model file directory", placeholder="/tmp/audio-separator-models/")
         with gr.Row():
-            output_dir = gr.Textbox(value = "/content/output", label = "File output directory", placeholder = "/content/output")
-            output_format = gr.Dropdown(value = "wav", choices = ["wav", "flac", "mp3"], label = "Output Format")
+            output_dir = gr.Textbox(value="/content/output", label="File output directory", placeholder="/content/output")
+            output_format = gr.Dropdown(value="wav", choices=["wav", "flac", "mp3"], label="Output Format")
         with gr.Row():
-            normalization_threshold = gr.Slider(value = 0.9, step = 0.1, minimum = 0, maximum = 1, label = "Normalization", info = "max peak amplitude to normalize input and output audio.")
-            amplification_threshold = gr.Slider(value = 0.6, step = 0.1, minimum = 0, maximum = 1, label = "Amplification", info = "min peak amplitude to amplify input and output audio.")
-  
+            normalization_threshold = gr.Slider(value=0.9, step=0.1, minimum=0, maximum=1, label="Normalization", info="max peak amplitude to normalize input and output audio.")
+            amplification_threshold = gr.Slider(value=0.6, step=0.1, minimum=0, maximum=1, label="Amplification", info="min peak amplitude to amplify input and output audio.")
+
     with gr.Tab("Roformer"):
         with gr.Row():
-            roformer_model = gr.Dropdown(label = "Select the Model", choices=list(ROFORMER_MODELS.keys()))
+            roformer_model = gr.Dropdown(label="Select the Model", choices=list(ROFORMER_MODELS.keys()))
         with gr.Row():
-            mdxc_segment_size = gr.Slider(minimum = 32, maximum = 4000, step = 32, value = 256, label = "Segment Size", info = "Larger consumes more resources, but may give better results.")
-            mdxc_overlap = gr.Slider(minimum = 2, maximum = 4, step = 1, value = 4, label = "Overlap", info = "Amount of overlap between prediction windows.")
+            roformer_segment_size = gr.Slider(minimum=32, maximum=4000, step=32, value=256, label="Segment Size", info="Larger consumes more resources, but may give better results.")
+            roformer_overlap = gr.Slider(minimum=2, maximum=4, step=1, value=4, label="Overlap", info="Amount of overlap between prediction windows.")
         with gr.Row():
-            roformer_audio = gr.Audio(label = "Input Audio", type = "numpy")
+            roformer_audio = gr.Audio(label="Input Audio", type="numpy")
         with gr.Row():
-            roformer_button = gr.Button("Separate!", variant = "primary")
+            roformer_button = gr.Button("Separate!", variant="primary")
         with gr.Row():
-            roformer_stem1 = gr.Audio(label = "Stem 1", type = "filepath", show_download_button = True, interactive = False)
-            roformer_stem2 = gr.Audio(label = "Stem 2", type = "filepath", show_download_button = True, interactive = False)
+            roformer_stem1 = gr.Audio(label="Stem 1", type="filepath", show_download_button=True, interactive=False)
+            roformer_stem2 = gr.Audio(label="Stem 2", type="filepath", show_download_button=True, interactive=False)
 
     with gr.Tab("MDX23C"):
         with gr.Row():
-            mdx23c_model = gr.Dropdown(label = "Select the Model", choices = MDC23C_MODELS)
+            mdx23c_model = gr.Dropdown(label="Select the Model", choices=MDC23C_MODELS)
         with gr.Row():
-            mdx23c_segment_size = gr.Slider(minimum = 32, maximum = 4000, step = 32, value = 256, label = "Segment Size", info = "Larger consumes more resources, but may give better results.")
-            mdx23c_overlap = gr.Slider(minimum = 2, maximum = 50, step = 1, value = 8, label = "Overlap", info = "Amount of overlap between prediction windows.")
+            mdx23c_segment_size = gr.Slider(minimum=32, maximum=4000, step=32, value=256, label="Segment Size", info="Larger consumes more resources, but may give better results.")
+            mdx23c_overlap = gr.Slider(minimum=2, maximum=50, step=1, value=8, label="Overlap", info="Amount of overlap between prediction windows.")
         with gr.Row():
-            mdx23c_audio = gr.Audio(label = "Input Audio", type = "numpy")
+            mdx23c_audio = gr.Audio(label="Input Audio", type="numpy")
         with gr.Row():
-            mdx23c_button = gr.Button("Separate!", variant = "primary")
+            mdx23c_button = gr.Button("Separate!", variant="primary")
         with gr.Row():
-            mdx23c_stem1 = gr.Audio(label = "Stem 1", type = "filepath", show_download_button = True, interactive = False)
-            mdx23c_stem2 = gr.Audio(label = "Stem 2", type = "filepath", show_download_button = True, interactive = False)
-  
+            mdx23c_stem1 = gr.Audio(label="Stem 1", type="filepath", show_download_button=True, interactive=False)
+            mdx23c_stem2 = gr.Audio(label="Stem 2", type="filepath", show_download_button=True, interactive=False)
+
     with gr.Tab("MDX-NET"):
         with gr.Row():
-            mdx_model = gr.Dropdown(label = "Select the Model", choices = MDXNET_MODELS)
+            mdx_model = gr.Dropdown(label="Select the Model", choices=MDXNET_MODELS)
         with gr.Row():
-            mdx_hop_length = gr.Slider(minimum = 0.001, maximum = 0.999, step = 0.001, value = 0.25, label = "")
-            mdx_segment_size = gr.Slider(minimum = 32, maximum = 4000, step = 32, value = 256, label = "Segment Size", info = "Larger consumes more resources, but may give better results.")
-            mdx_overlap = gr.Slider(minimum = 0.001, maximum = 0.999, step = 0.001, value = 0.25, label = "Overlap")
-            mdx_denoise = gr.Checkbox(value = True, label = "Denoise", info = "Enable denoising during separation.")
+            mdx_hop_length = gr.Slider(minimum=0.001, maximum=0.999, step=0.001, value=0.25, label="Hop Length")
+            mdx_segment_size = gr.Slider(minimum=32, maximum=4000, step=32, value=256, label="Segment Size", info="Larger consumes more resources, but may give better results.")
+            mdx_overlap = gr.Slider(minimum=0.001, maximum=0.999, step=0.001, value=0.25, label="Overlap")
+            mdx_denoise = gr.Checkbox(value=True, label="Denoise", info="Enable denoising during separation.")
         with gr.Row():
-            mdx_audio = gr.Audio(label = "Input Audio", type = "numpy")
+            mdx_audio = gr.Audio(label="Input Audio", type="numpy")
         with gr.Row():
-            mdx_button = gr.Button("Separate!", variant = "primary")
+            mdx_button = gr.Button("Separate!", variant="primary")
         with gr.Row():
-            mdx_stem1 = gr.Audio(label = "Stem 1", type = "filepath", show_download_button = True, interactive = False)
-            mdx_stem2 = gr.Audio(label = "Stem 2", type = "filepath", show_download_button = True, interactive = False)
-  
+            mdx_stem1 = gr.Audio(label="Stem 1", type="filepath", show_download_button=True, interactive=False)
+            mdx_stem2 = gr.Audio(label="Stem 2", type="filepath", show_download_button=True, interactive=False)
+
     with gr.Tab("VR ARCH"):
         with gr.Row():
-            vr_model = gr.Dropdown(label = "Select the Model", choices = VR_ARCH_MODELS)
+            vr_model = gr.Dropdown(label="Select the Model", choices=VR_ARCH_MODELS)
         with gr.Row():
-            vr_window_size = gr.Dropdown(minimum = 320, maximum = 1024, step = 32, value = 512, label = "Window Size", choices = vrarch_window_size_values)
-            vr_aggression = gr.Slider(minimum = 1, maximum = 50, step = 1, value = 5, label = "Agression", info = "Intensity of primary stem extraction.")
-            vr_tta = gr.Checkbox(value = True, label = "TTA", info = "Enable Test-Time-Augmentation; slow but improves quality.")
-            vr_post_process = gr.Checkbox(value = True, label = "", info = "")
-            vr_post_process_threshold = gr.Slider(minimum = 0.1, maximum = 0.3, step = 0.1, value = 0.2, label = "", info = "")
-            vr_high_end_process = gr.Checkbox(value = False, label = "High End Process", info = "Mirror the missing frequency range of the output.")
+            vr_window_size = gr.Dropdown(minimum=320, maximum=1024, step=32, value=512, label="Window Size", choices=vrarch_window_size_values)
+            vr_aggression = gr.Slider(minimum=1, maximum=50, step=1, value=5, label="Agression", info="Intensity of primary stem extraction.")
+            vr_tta = gr.Checkbox(value=True, label="TTA", info="Enable Test-Time-Augmentation; slow but improves quality.")
+            vr_post_process = gr.Checkbox(value=True, label="Post Process", info="Enable post-processing.")
+            vr_post_process_threshold = gr.Slider(minimum=0.1, maximum=0.3, step=0.1, value=0.2, label="Post Process Threshold", info="Threshold for post-processing.")
+            vr_high_end_process = gr.Checkbox(value=False, label="High End Process", info="Mirror the missing frequency range of the output.")
         with gr.Row():
-            vr_audio = gr.Audio(label = "Input Audio", type = "numpy", interactive = True)
+            vr_audio = gr.Audio(label="Input Audio", type="numpy", interactive=True)
         with gr.Row():
-            vr_button = gr.Button("Separate!", variant = "primary")
+            vr_button = gr.Button("Separate!", variant="primary")
         with gr.Row():
-            vr_stem1 = gr.Audio(label = "Stem 1", type = "filepath", show_download_button = True, interactive = False)
-            vr_stem2 = gr.Audio(label = "Stem 2", type = "filepath", show_download_button = True, interactive = False)
-  
+            vr_stem1 = gr.Audio(label="Stem 1", type="filepath", show_download_button=True, interactive=False)
+            vr_stem2 = gr.Audio(label="Stem 2", type="filepath", show_download_button=True, interactive=False)
+
     with gr.Tab("Demucs"):
         with gr.Row():
-            demucs_model = gr.Dropdown(label = "Select the Model", choices = DEMUCS_MODELS, interactive = True)
+            demucs_model = gr.Dropdown(label="Select the Model", choices=DEMUCS_MODELS, interactive=True)
         with gr.Row():
-            demucs_segment_size = gr.Slider(minimum = 1, maximum = 100, step = 1, value = 50, label = "Segment Size")
-            demucs_shifts = gr.Slider(minimum = 0, maximum = 20, step = 1, value = 2, label = "Shifts", info = "Number of predictions with random shifts, higher = slower but better quality.")
-            demucs_overlap = gr.Slider(minimum = 0.001, maximum = 0.999, step = 0.001, value = 0.25, label = "Overlap")
-            demucs_segments_enabled = gr.Checkbox(value = True, label = "Segment-wise processing")
+            demucs_segment_size = gr.Slider(minimum=1, maximum=100, step=1, value=50, label="Segment Size")
+            demucs_shifts = gr.Slider(minimum=0, maximum=20, step=1, value=2, label="Shifts", info="Number of predictions with random shifts, higher = slower but better quality.")
+            demucs_overlap = gr.Slider(minimum=0.001, maximum=0.999, step=0.001, value=0.25, label="Overlap")
+            demucs_segments_enabled = gr.Checkbox(value=True, label="Segment-wise processing")
         with gr.Row():
-            demucs_audio = gr.Audio(label = "Input Audio", type = "numpy", interactive = True)
+            demucs_audio = gr.Audio(label="Input Audio", type="numpy", interactive=True)
         with gr.Row():
-            demucs_button = gr.Button("Separate!", variant = "primary")
+            demucs_button = gr.Button("Separate!", variant="primary")
         with gr.Row():
-            demucs_stem1 = gr.Audio(label = "Stem 1", type = "filepath", show_download_button = True, interactive = False)
-            demucs_stem2 = gr.Audio(label = "Stem 2", type = "filepath", show_download_button = True, interactive = False)
+            demucs_stem1 = gr.Audio(label="Stem 1", type="filepath", show_download_button=True, interactive=False)
+            demucs_stem2 = gr.Audio(label="Stem 2", type="filepath", show_download_button=True, interactive=False)
         with gr.Row():
-            demucs_stem3 = gr.Audio(label = "Stem 3", type = "filepath", show_download_button = True, interactive = False)
-            demucs_stem4 = gr.Audio(label = "Stem 4", type = "filepath", show_download_button = True, interactive = False)
-  
+            demucs_stem3 = gr.Audio(label="Stem 3", type="filepath", show_download_button=True, interactive=False)
+            demucs_stem4 = gr.Audio(label="Stem 4", type="filepath", show_download_button=True, interactive=False)
+
     roformer_button.click(
-      roformer_separator,
-      inputs = [roformer_audio, roformer_model, roformer_segment_size, roformer_overlap],
-      outputs = [roformer_stem1, roformer_stem2],
+        roformer_separator,
+        inputs=[roformer_audio, roformer_model, roformer_segment_size, roformer_overlap],
+        outputs=[roformer_stem1, roformer_stem2],
     )
     mdx23c_button.click(
-      mdx23c_separator,
-      inputs = [mdx23c_audio, mdx23c_model, mdx23c_segment_size, mdx23c_overlap],
-      outputs = [mdx23c_stem1, mdx23c_stem2],
+        mdx23c_separator,
+        inputs=[mdx23c_audio, mdx23c_model, mdx23c_segment_size, mdx23c_overlap],
+        outputs=[mdx23c_stem1, mdx23c_stem2],
     )
     mdx_button.click(
-      mdx_separator,
-      inputs = [mdx_audio, mdx_model, mdx_hop_length, mdx_segment_size, mdx_overlap, mdx_denoise],
-      outputs = [mdx_stem1, mdx_stem2],
+        mdx_separator,
+        inputs=[mdx_audio, mdx_model, mdx_hop_length, mdx_segment_size, mdx_overlap, mdx_denoise],
+        outputs=[mdx_stem1, mdx_stem2],
     )
     vr_button.click(
-      vr_separator,
-      inputs = [vr_audio, vr_model, vr_window_size, vr_aggression, vr_tta, vr_post_process, vr_post_process_threshold, vr_high_end_process],
-      outputs = [vr_stem1, vr_stem2],
+        vr_separator,
+        inputs=[vr_audio, vr_model, vr_window_size, vr_aggression, vr_tta, vr_post_process, vr_post_process_threshold, vr_high_end_process],
+        outputs=[vr_stem1, vr_stem2],
     )
     demucs_button.click(
-      demucs_separator,
-      inputs = [demucs_audio, demucs_model, demucs_segment_size, demucs_shifts, demucs_overlap, demucs_segments_enabled],
-      outputs = [demucs_stem1, demucs_stem2, demucs_stem3, demucs_stem4],
+        demucs_separator,
+        inputs=[demucs_audio, demucs_model, demucs_segment_size, demucs_shifts, demucs_overlap, demucs_segments_enabled],
+        outputs=[demucs_stem1, demucs_stem2, demucs_stem3, demucs_stem4],
     )
 
 app.launch(share=True)
