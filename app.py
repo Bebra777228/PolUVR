@@ -95,21 +95,21 @@ DEMUCS_MODELS = [
 ]
 
 
-def roformer_separator(audio_path):
+def roformer_separator(roformer_audio, roformer_model, roformer_segment_size, roformer_overlap, output_dir, output_format, normalization_threshold, amplification_threshold):
   separator = Separator(
     output_dir=output_dir,
     output_format=output_format,
     normalization_threshold=normalization_threshold,
     amplification_threshold=amplification_threshold,
     mdxc_params={
-      "batch_size": roformer_batch_size,
+      "batch_size": 1,
       "segment_size": roformer_segment_size,
       "overlap": roformer_overlap,
     }
   )
 
   separator.load_model(model_filename=roformer_model)
-  roformer_separation = separator.separate(audio_path)
+  roformer_separation = separator.separate(roformer_audio)
   
   stem1_file = roformer_separation[0]
   stem2_file = roformer_separation[1]
@@ -117,14 +117,14 @@ def roformer_separator(audio_path):
   return stem1_file, stem2_file
 
 
-def mdx23c_separator(audio_path):
+def mdx23c_separator(mdx23c_audio, mdx23c_model, mdx23c_segment_size, mdx23c_overlap, output_dir, output_format, normalization_threshold, amplification_threshold):
   separator = Separator(
     output_dir=output_dir,
     output_format=output_format,
     normalization_threshold=normalization_threshold,
     amplification_threshold=amplification_threshold,
     mdxc_params={
-      "batch_size": mdx23c_batch_size,
+      "batch_size": 1,
       "segment_size": mdx23c_segment_size,
       "overlap": mdx23c_overlap,
     }
@@ -139,14 +139,14 @@ def mdx23c_separator(audio_path):
   return stem1_file, stem2_file
 
 
-def mdx_separator(audio_path):
+def mdx_separator(mdx_audio, mdx_model, mdx_hop_length, mdx_segment_size, mdx_overlap, mdx_denoise, output_dir, output_format, normalization_threshold, amplification_threshold):
   separator = Separator(
     output_dir=output_dir,
     output_format=output_format,
     normalization_threshold=normalization_threshold,
     amplification_threshold=amplification_threshold,
     mdx_params={
-      "batch_size": mdx_batch_size,
+      "batch_size": 1,
       "hop_length": mdx_hop_length,
       "segment_size": mdx_segment_size,
       "overlap": mdx_overlap,
@@ -155,7 +155,7 @@ def mdx_separator(audio_path):
   )
 
   separator.load_model(model_filename=mdx_model)
-  mdx_separation = separator.separate(audio_path)
+  mdx_separation = separator.separate(mdx_audio)
 
   stem1_file = mdx_separation[0]
   stem2_file = mdx_separation[1]
@@ -163,14 +163,14 @@ def mdx_separator(audio_path):
   return stem1_file, stem2_file
 
 
-def vr_separator(audio_path):
+def vr_separator(vr_audio, vr_model, vr_window_size, vr_aggression, vr_tta, vr_post_process, vr_post_process_threshold, vr_high_end_process, output_dir, output_format, normalization_threshold, amplification_threshold):
   separator = Separator(
     output_dir=output_dir,
     output_format=output_format,
     normalization_threshold=normalization_threshold,
     amplification_threshold=amplification_threshold,
     vr_params={
-      "batch_size": vr_batch_size,
+      "batch_size": 1,
       "window_size": vr_window_size,
       "aggression": vr_aggression,
       "enable_tta": vr_tta,
@@ -181,7 +181,7 @@ def vr_separator(audio_path):
   )
 
   separator.load_model(model_filename=vr_model)
-  vr_separation = separator.separate(audio_path)
+  vr_separation = separator.separate(vr_audio)
 
   stem1_file = vr_separation[0]
   stem2_file = vr_separation[1]
@@ -189,7 +189,7 @@ def vr_separator(audio_path):
   return stem1_file, stem2_file
 
 
-def demucs_separator(audio_path):
+def demucs_separator(demucs_audio, demucs_model, demucs_segment_size, demucs_shifts, demucs_overlap, demucs_segments_enabled, output_dir, output_format, normalization_threshold, amplification_threshold):
   separator = Separator(
     output_dir=output_dir,
     output_format=output_format,
@@ -204,7 +204,7 @@ def demucs_separator(audio_path):
   )
 
   separator.load_model(model_filename=demucs_model)
-  demucs_separation = separator.separate(audio_path)
+  demucs_separation = separator.separate(demucs_audio)
 
   stem1_file = demucs_separation[0]
   stem2_file = demucs_separation[1]
