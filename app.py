@@ -7,6 +7,7 @@ ROFORMER_MODELS = {
   'BS-Roformer-Viperx-1297.ckpt': 'model_bs_roformer_ep_317_sdr_12.9755.ckpt',
   'BS-Roformer-Viperx-1296.ckpt': 'model_bs_roformer_ep_368_sdr_12.9628.ckpt',
   'BS-Roformer-Viperx-1053.ckpt': 'model_bs_roformer_ep_937_sdr_10.5309.ckpt',
+  'BS-Roformer-De-Reverb.ckpt': 'deverb_bs_roformer_8_384dim_10depth.ckpt',
   'Mel-Roformer-Viperx-1143.ckpt': 'model_mel_band_roformer_ep_3005_sdr_11.4360.ckpt',
   'Mel-Roformer-Crowd-Aufr33-Viperx.ckpt': 'mel_band_roformer_crowd_aufr33_viperx_sdr_8.7144.ckpt',
   'Mel-Roformer-Karaoke-Aufr33-Viperx.ckpt': 'mel_band_roformer_karaoke_aufr33_viperx_sdr_10.1956.ckpt',
@@ -95,8 +96,9 @@ DEMUCS_MODELS = [
 ]
 
 
-def roformer_separator(roformer_audio, roformer_model, roformer_segment_size, roformer_overlap, output_dir, output_format, normalization_threshold, amplification_threshold):
+def roformer_separator(roformer_audio, roformer_model, roformer_segment_size, roformer_overlap, model_file_dir, output_dir, output_format, normalization_threshold, amplification_threshold):
   separator = Separator(
+    model_file_dir=model_file_dir,
     output_dir=output_dir,
     output_format=output_format,
     normalization_threshold=normalization_threshold,
@@ -117,8 +119,9 @@ def roformer_separator(roformer_audio, roformer_model, roformer_segment_size, ro
   return stem1_file, stem2_file
 
 
-def mdx23c_separator(mdx23c_audio, mdx23c_model, mdx23c_segment_size, mdx23c_overlap, output_dir, output_format, normalization_threshold, amplification_threshold):
+def mdx23c_separator(mdx23c_audio, mdx23c_model, mdx23c_segment_size, mdx23c_overlap, model_file_dir, output_dir, output_format, normalization_threshold, amplification_threshold):
   separator = Separator(
+    model_file_dir=model_file_dir,
     output_dir=output_dir,
     output_format=output_format,
     normalization_threshold=normalization_threshold,
@@ -139,8 +142,9 @@ def mdx23c_separator(mdx23c_audio, mdx23c_model, mdx23c_segment_size, mdx23c_ove
   return stem1_file, stem2_file
 
 
-def mdx_separator(mdx_audio, mdx_model, mdx_hop_length, mdx_segment_size, mdx_overlap, mdx_denoise, output_dir, output_format, normalization_threshold, amplification_threshold):
+def mdx_separator(mdx_audio, mdx_model, mdx_hop_length, mdx_segment_size, mdx_overlap, mdx_denoise, model_file_dir, output_dir, output_format, normalization_threshold, amplification_threshold):
   separator = Separator(
+    model_file_dir=model_file_dir,
     output_dir=output_dir,
     output_format=output_format,
     normalization_threshold=normalization_threshold,
@@ -163,8 +167,9 @@ def mdx_separator(mdx_audio, mdx_model, mdx_hop_length, mdx_segment_size, mdx_ov
   return stem1_file, stem2_file
 
 
-def vr_separator(vr_audio, vr_model, vr_window_size, vr_aggression, vr_tta, vr_post_process, vr_post_process_threshold, vr_high_end_process, output_dir, output_format, normalization_threshold, amplification_threshold):
+def vr_separator(vr_audio, vr_model, vr_window_size, vr_aggression, vr_tta, vr_post_process, vr_post_process_threshold, vr_high_end_process, model_file_dir, output_dir, output_format, normalization_threshold, amplification_threshold):
   separator = Separator(
+    model_file_dir=model_file_dir,
     output_dir=output_dir,
     output_format=output_format,
     normalization_threshold=normalization_threshold,
@@ -189,8 +194,9 @@ def vr_separator(vr_audio, vr_model, vr_window_size, vr_aggression, vr_tta, vr_p
   return stem1_file, stem2_file
 
 
-def demucs_separator(demucs_audio, demucs_model, demucs_segment_size, demucs_shifts, demucs_overlap, demucs_segments_enabled, output_dir, output_format, normalization_threshold, amplification_threshold):
+def demucs_separator(demucs_audio, demucs_model, demucs_segment_size, demucs_shifts, demucs_overlap, demucs_segments_enabled, model_file_dir, output_dir, output_format, normalization_threshold, amplification_threshold):
   separator = Separator(
+    model_file_dir=model_file_dir,
     output_dir=output_dir,
     output_format=output_format,
     normalization_threshold=normalization_threshold,
@@ -216,6 +222,7 @@ def demucs_separator(demucs_audio, demucs_model, demucs_segment_size, demucs_shi
 
 with gr.Blocks(title="🎵 Audio Separator 🎵", css="footer{display:none !important}") as app:
     with gr.Accordion("General settings", open=False):
+        model_file_dir = gr.Textbox(value="/tmp/audio-separator-models/", label="Directory for storing model files", placeholder="/tmp/audio-separator-models/")
         with gr.Row():
             output_dir = gr.Textbox(value="/content/output", label="File output directory", placeholder="/content/output")
             output_format = gr.Dropdown(value="wav", choices=["wav", "flac", "mp3"], label="Output Format")
@@ -311,6 +318,7 @@ with gr.Blocks(title="🎵 Audio Separator 🎵", css="footer{display:none !impo
           roformer_model,
           roformer_segment_size,
           roformer_overlap,
+          model_file_dir,
           output_dir,
           output_format,
           normalization_threshold,
@@ -325,6 +333,7 @@ with gr.Blocks(title="🎵 Audio Separator 🎵", css="footer{display:none !impo
           mdx23c_model,
           mdx23c_segment_size,
           mdx23c_overlap,
+          model_file_dir,
           output_dir,
           output_format,
           normalization_threshold,
@@ -341,6 +350,7 @@ with gr.Blocks(title="🎵 Audio Separator 🎵", css="footer{display:none !impo
           mdx_segment_size,
           mdx_overlap,
           mdx_denoise,
+          model_file_dir,
           output_dir,
           output_format,
           normalization_threshold,
@@ -359,6 +369,7 @@ with gr.Blocks(title="🎵 Audio Separator 🎵", css="footer{display:none !impo
           vr_post_process,
           vr_post_process_threshold,
           vr_high_end_process,
+          model_file_dir,
           output_dir,
           output_format,
           normalization_threshold,
@@ -375,6 +386,7 @@ with gr.Blocks(title="🎵 Audio Separator 🎵", css="footer{display:none !impo
           demucs_shifts,
           demucs_overlap,
           demucs_segments_enabled,
+          model_file_dir,
           output_dir,
           output_format,
           normalization_threshold,
