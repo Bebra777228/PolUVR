@@ -1,5 +1,6 @@
 import os
-import tempfile
+import shutil
+import logging
 import gradio as gr
 
 from audio_separator.separator import Separator
@@ -104,150 +105,198 @@ def rename_stems(input_file, output_dir, stems, output_format):
     for i, stem in enumerate(stems):
         new_name = f"{base_name}_(Stem{i+1}).{output_format}"
         new_path = os.path.join(output_dir, new_name)
-        os.rename(stem, new_path)
+        os.rename(os.path.join(output_dir, stem), new_path)
         renamed_stems.append(new_path)
     return renamed_stems
 
-def roformer_separator(audio, model, seg_size, overlap, model_dir, out_dir, out_format, norm_thresh, amp_thresh):
+def prepare_output_dir(input_file, output_dir):
+    """Create a directory for the output files and clean it if it already exists."""
+    base_name = os.path.splitext(os.path.basename(input_file))[0]
+    out_dir = os.path.join(output_dir, base_name)
+    if os.path.exists(out_dir):
+        shutil.rmtree(out_dir)
+    os.makedirs(out_dir)
+    return out_dir
+
+def roformer_separator(audio, model_key, seg_size, overlap, model_dir, out_dir, out_format, norm_thresh, amp_thresh, progress=gr.Progress()):
     """Separate audio using Roformer model."""
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        separator = Separator(
-            model_file_dir=model_dir,
-            output_dir=tmp_dir,
-            output_format=out_format,
-            normalization_threshold=norm_thresh,
-            amplification_threshold=amp_thresh,
-            mdxc_params={
-                "batch_size": 1,
-                "segment_size": seg_size,
-                "overlap": overlap,
-            }
-        )
+    model = ROFORMER_MODELS[model_key]
+    out_dir = prepare_output_dir(audio, out_dir)
+    separator = Separator(
+        log_level=logging.WARNING,
+        model_file_dir=model_dir,
+        output_dir=out_dir,
+        output_format=out_format,
+        normalization_threshold=norm_thresh,
+        amplification_threshold=amp_thresh,
+        mdxc_params={
+            "batch_size": 1,
+            "segment_size": seg_size,
+            "overlap": overlap,
+        }
+    )
 
-        separator.load_model(model_filename=model)
-        separation = separator.separate(audio)
+    progress(0.2, desc="Model loaded")
+    separator.load_model(model_filename=model)
 
-        stems = rename_stems(audio, out_dir, separation, out_format)
+    progress(0.7, desc="Audio separated")
+    separation = separator.separate(audio)
 
-        return stems[0], stems[1]
+    progress(0.9, desc="Stems renamed")
+    stems = rename_stems(audio, out_dir, separation, out_format)
 
-def mdx23c_separator(audio, model, seg_size, overlap, model_dir, out_dir, out_format, norm_thresh, amp_thresh):
+    return stems[0], stems[1]
+
+def mdx23c_separator(audio, model, seg_size, overlap, model_dir, out_dir, out_format, norm_thresh, amp_thresh, progress=gr.Progress()):
     """Separate audio using MDX23C model."""
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        separator = Separator(
-            model_file_dir=model_dir,
-            output_dir=tmp_dir,
-            output_format=out_format,
-            normalization_threshold=norm_thresh,
-            amplification_threshold=amp_thresh,
-            mdxc_params={
-                "batch_size": 1,
-                "segment_size": seg_size,
-                "overlap": overlap,
-            }
-        )
+    out_dir = prepare_output_dir(audio, out_dir)
+    separator = Separator(
+        log_level=logging.WARNING,
+        model_file_dir=model_dir,
+        output_dir=out_dir,
+        output_format=out_format,
+        normalization_threshold=norm_thresh,
+        amplification_threshold=amp_thresh,
+        mdxc_params={
+            "batch_size": 1,
+            "segment_size": seg_size,
+            "overlap": overlap,
+        }
+    )
 
-        separator.load_model(model_filename=model)
-        separation = separator.separate(audio)
+    progress(0.2, desc="Model loaded")
+    separator.load_model(model_filename=model)
 
-        stems = rename_stems(audio, out_dir, separation, out_format)
+    progress(0.7, desc="Audio separated")
+    separation = separator.separate(audio)
 
-        return stems[0], stems[1]
+    progress(0.9, desc="Stems renamed")
+    stems = rename_stems(audio, out_dir, separation, out_format)
 
-def mdx_separator(audio, model, hop_length, seg_size, overlap, denoise, model_dir, out_dir, out_format, norm_thresh, amp_thresh):
+    return stems[0], stems[1]
+
+def mdx_separator(audio, model, hop_length, seg_size, overlap, denoise, model_dir, out_dir, out_format, norm_thresh, amp_thresh, progress=gr.Progress()):
     """Separate audio using MDX-NET model."""
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        separator = Separator(
-            model_file_dir=model_dir,
-            output_dir=tmp_dir,
-            output_format=out_format,
-            normalization_threshold=norm_thresh,
-            amplification_threshold=amp_thresh,
-            mdx_params={
-                "batch_size": 1,
-                "hop_length": hop_length,
-                "segment_size": seg_size,
-                "overlap": overlap,
-                "enable_denoise": denoise,
-            }
-        )
+    out_dir = prepare_output_dir(audio, out_dir)
+    separator = Separator(
+        log_level=logging.WARNING,
+        model_file_dir=model_dir,
+        output_dir=out_dir,
+        output_format=out_format,
+        normalization_threshold=norm_thresh,
+        amplification_threshold=amp_thresh,
+        mdx_params={
+            "batch_size": 1,
+            "hop_length": hop_length,
+            "segment_size": seg_size,
+            "overlap": overlap,
+            "enable_denoise": denoise,
+        }
+    )
 
-        separator.load_model(model_filename=model)
-        separation = separator.separate(audio)
+    progress(0.2, desc="Model loaded")
+    separator.load_model(model_filename=model)
 
-        stems = rename_stems(audio, out_dir, separation, out_format)
+    progress(0.7, desc="Audio separated")
+    separation = separator.separate(audio)
 
-        return stems[0], stems[1]
+    progress(0.9, desc="Stems renamed")
+    stems = rename_stems(audio, out_dir, separation, out_format)
 
-def vr_separator(audio, model, window_size, aggression, tta, post_process, post_process_threshold, high_end_process, model_dir, out_dir, out_format, norm_thresh, amp_thresh):
+    return stems[0], stems[1]
+
+def vr_separator(audio, model, window_size, aggression, tta, post_process, post_process_threshold, high_end_process, model_dir, out_dir, out_format, norm_thresh, amp_thresh, progress=gr.Progress()):
     """Separate audio using VR ARCH model."""
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        separator = Separator(
-            model_file_dir=model_dir,
-            output_dir=tmp_dir,
-            output_format=out_format,
-            normalization_threshold=norm_thresh,
-            amplification_threshold=amp_thresh,
-            vr_params={
-                "batch_size": 1,
-                "window_size": window_size,
-                "aggression": aggression,
-                "enable_tta": tta,
-                "enable_post_process": post_process,
-                "post_process_threshold": post_process_threshold,
-                "high_end_process": high_end_process,
-            }
-        )
+    out_dir = prepare_output_dir(audio, out_dir)
+    separator = Separator(
+        log_level=logging.WARNING,
+        model_file_dir=model_dir,
+        output_dir=out_dir,
+        output_format=out_format,
+        normalization_threshold=norm_thresh,
+        amplification_threshold=amp_thresh,
+        vr_params={
+            "batch_size": 1,
+            "window_size": window_size,
+            "aggression": aggression,
+            "enable_tta": tta,
+            "enable_post_process": post_process,
+            "post_process_threshold": post_process_threshold,
+            "high_end_process": high_end_process,
+        }
+    )
 
-        separator.load_model(model_filename=model)
-        separation = separator.separate(audio)
+    progress(0.2, desc="Model loaded")
+    separator.load_model(model_filename=model)
 
-        stems = rename_stems(audio, out_dir, separation, out_format)
+    progress(0.7, desc="Audio separated")
+    separation = separator.separate(audio)
 
-        return stems[0], stems[1]
+    progress(0.9, desc="Stems renamed")
+    stems = rename_stems(audio, out_dir, separation, out_format)
 
-def demucs_separator(audio, model, seg_size, shifts, overlap, segments_enabled, model_dir, out_dir, out_format, norm_thresh, amp_thresh):
+    return stems[0], stems[1]
+
+def demucs_separator(audio, model, seg_size, shifts, overlap, segments_enabled, model_dir, out_dir, out_format, norm_thresh, amp_thresh, progress=gr.Progress()):
     """Separate audio using Demucs model."""
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        separator = Separator(
-            model_file_dir=model_dir,
-            output_dir=tmp_dir,
-            output_format=out_format,
-            normalization_threshold=norm_thresh,
-            amplification_threshold=amp_thresh,
-            demucs_params={
-                "segment_size": seg_size,
-                "shifts": shifts,
-                "overlap": overlap,
-                "segments_enabled": segments_enabled,
-            }
-        )
+    out_dir = prepare_output_dir(audio, out_dir)
+    separator = Separator(
+        log_level=logging.WARNING,
+        model_file_dir=model_dir,
+        output_dir=out_dir,
+        output_format=out_format,
+        normalization_threshold=norm_thresh,
+        amplification_threshold=amp_thresh,
+        demucs_params={
+            "segment_size": seg_size,
+            "shifts": shifts,
+            "overlap": overlap,
+            "segments_enabled": segments_enabled,
+        }
+    )
 
-        separator.load_model(model_filename=model)
-        separation = separator.separate(audio)
+    progress(0.2, desc="Model loaded")
+    separator.load_model(model_filename=model)
 
-        stems = rename_stems(audio, out_dir, separation, out_format)
+    progress(0.7, desc="Audio separated")
+    separation = separator.separate(audio)
 
-        return stems[0], stems[1], stems[2], stems[3]
+    progress(0.9, desc="Stems renamed")
+    stems = rename_stems(audio, out_dir, separation, out_format)
 
-with gr.Blocks(title="🎵 Audio Separator 🎵", css="footer{display:none !important}") as app:
+    return stems[0], stems[1], stems[2], stems[3]
+
+with gr.Blocks(
+    title="🎵 PolUVR - Politrees 🎵",
+    css="footer{display:none !important}",
+    theme=gr.themes.Soft(
+        primary_hue="green",
+        secondary_hue="green",
+        neutral_hue="neutral",
+        spacing_size="sm",
+        radius_size="lg",
+    )
+) as app:
+    gr.Markdown("<h1> Audio-Separator by Politrees </h1>")
     with gr.Accordion("General settings", open=False):
-        model_file_dir = gr.Textbox(value="/tmp/audio-separator-models/", label="Directory for storing model files", placeholder="/tmp/audio-separator-models/")
-        with gr.Row():
-            output_dir = gr.Textbox(value="/content/output", label="File output directory", placeholder="/content/output")
-            output_format = gr.Dropdown(value="wav", choices=["wav", "flac", "mp3"], label="Output Format")
-        with gr.Row():
-            norm_threshold = gr.Slider(value=0.9, step=0.1, minimum=0, maximum=1, label="Normalization", info="max peak amplitude to normalize input and output audio.")
-            amp_threshold = gr.Slider(value=0.6, step=0.1, minimum=0, maximum=1, label="Amplification", info="min peak amplitude to amplify input and output audio.")
+        with gr.Group():
+            model_file_dir = gr.Textbox(value="/tmp/audio-separator-models/", label="Directory for storing model files", placeholder="/tmp/audio-separator-models/", interactive=False)
+            with gr.Row():
+                output_dir = gr.Textbox(value="output", label="File output directory", placeholder="output", interactive=False)
+                output_format = gr.Dropdown(value="wav", choices=["wav", "flac", "mp3"], label="Output Format")
+            with gr.Row():
+                norm_threshold = gr.Slider(value=0.9, step=0.1, minimum=0, maximum=1, label="Normalization", info="max peak amplitude to normalize input and output audio.")
+                amp_threshold = gr.Slider(value=0.6, step=0.1, minimum=0, maximum=1, label="Amplification", info="min peak amplitude to amplify input and output audio.")
 
     with gr.Tab("Roformer"):
+        with gr.Group():
+            with gr.Row():
+                roformer_model = gr.Dropdown(label="Select the Model", choices=list(ROFORMER_MODELS.keys()))
+            with gr.Row():
+                roformer_seg_size = gr.Slider(minimum=32, maximum=4000, step=32, value=256, label="Segment Size", info="Larger consumes more resources, but may give better results.")
+                roformer_overlap = gr.Slider(minimum=2, maximum=10, step=1, value=8, label="Overlap", info="Amount of overlap between prediction windows.")
         with gr.Row():
-            roformer_model = gr.Dropdown(label="Select the Model", choices=list(ROFORMER_MODELS.keys()))
-        with gr.Row():
-            roformer_seg_size = gr.Slider(minimum=32, maximum=4000, step=32, value=256, label="Segment Size", info="Larger consumes more resources, but may give better results.")
-            roformer_overlap = gr.Slider(minimum=2, maximum=4, step=1, value=4, label="Overlap", info="Amount of overlap between prediction windows.")
-        with gr.Row():
-            roformer_audio = gr.Audio(label="Input Audio", type="numpy")
+            roformer_audio = gr.Audio(label="Input Audio", type="filepath")
         with gr.Row():
             roformer_button = gr.Button("Separate!", variant="primary")
         with gr.Row():
@@ -255,13 +304,14 @@ with gr.Blocks(title="🎵 Audio Separator 🎵", css="footer{display:none !impo
             roformer_stem2 = gr.Audio(label="Stem 2", type="filepath", interactive=False)
 
     with gr.Tab("MDX23C"):
+        with gr.Group():
+            with gr.Row():
+                mdx23c_model = gr.Dropdown(label="Select the Model", choices=MDX23C_MODELS)
+            with gr.Row():
+                mdx23c_seg_size = gr.Slider(minimum=32, maximum=4000, step=32, value=256, label="Segment Size", info="Larger consumes more resources, but may give better results.")
+                mdx23c_overlap = gr.Slider(minimum=2, maximum=50, step=1, value=8, label="Overlap", info="Amount of overlap between prediction windows.")
         with gr.Row():
-            mdx23c_model = gr.Dropdown(label="Select the Model", choices=MDX23C_MODELS)
-        with gr.Row():
-            mdx23c_seg_size = gr.Slider(minimum=32, maximum=4000, step=32, value=256, label="Segment Size", info="Larger consumes more resources, but may give better results.")
-            mdx23c_overlap = gr.Slider(minimum=2, maximum=50, step=1, value=8, label="Overlap", info="Amount of overlap between prediction windows.")
-        with gr.Row():
-            mdx23c_audio = gr.Audio(label="Input Audio", type="numpy")
+            mdx23c_audio = gr.Audio(label="Input Audio", type="filepath")
         with gr.Row():
             mdx23c_button = gr.Button("Separate!", variant="primary")
         with gr.Row():
@@ -269,15 +319,16 @@ with gr.Blocks(title="🎵 Audio Separator 🎵", css="footer{display:none !impo
             mdx23c_stem2 = gr.Audio(label="Stem 2", type="filepath", interactive=False)
 
     with gr.Tab("MDX-NET"):
+        with gr.Group():
+            with gr.Row():
+                mdx_model = gr.Dropdown(label="Select the Model", choices=MDXNET_MODELS)
+            with gr.Row():
+                mdx_hop_length = gr.Slider(minimum=0.001, maximum=0.999, step=0.001, value=0.25, label="Hop Length")
+                mdx_seg_size = gr.Slider(minimum=32, maximum=4000, step=32, value=256, label="Segment Size", info="Larger consumes more resources, but may give better results.")
+                mdx_overlap = gr.Slider(minimum=0.001, maximum=0.999, step=0.001, value=0.25, label="Overlap")
+                mdx_denoise = gr.Checkbox(value=True, label="Denoise", info="Enable denoising during separation.")
         with gr.Row():
-            mdx_model = gr.Dropdown(label="Select the Model", choices=MDXNET_MODELS)
-        with gr.Row():
-            mdx_hop_length = gr.Slider(minimum=0.001, maximum=0.999, step=0.001, value=0.25, label="Hop Length")
-            mdx_seg_size = gr.Slider(minimum=32, maximum=4000, step=32, value=256, label="Segment Size", info="Larger consumes more resources, but may give better results.")
-            mdx_overlap = gr.Slider(minimum=0.001, maximum=0.999, step=0.001, value=0.25, label="Overlap")
-            mdx_denoise = gr.Checkbox(value=True, label="Denoise", info="Enable denoising during separation.")
-        with gr.Row():
-            mdx_audio = gr.Audio(label="Input Audio", type="numpy")
+            mdx_audio = gr.Audio(label="Input Audio", type="filepath")
         with gr.Row():
             mdx_button = gr.Button("Separate!", variant="primary")
         with gr.Row():
@@ -285,17 +336,18 @@ with gr.Blocks(title="🎵 Audio Separator 🎵", css="footer{display:none !impo
             mdx_stem2 = gr.Audio(label="Stem 2", type="filepath", interactive=False)
 
     with gr.Tab("VR ARCH"):
+        with gr.Group():
+            with gr.Row():
+                vr_model = gr.Dropdown(label="Select the Model", choices=VR_ARCH_MODELS)
+            with gr.Row():
+                vr_window_size = gr.Slider(minimum=320, maximum=1024, step=32, value=512, label="Window Size")
+                vr_aggression = gr.Slider(minimum=1, maximum=50, step=1, value=5, label="Agression", info="Intensity of primary stem extraction.")
+                vr_tta = gr.Checkbox(value=True, label="TTA", info="Enable Test-Time-Augmentation; slow but improves quality.")
+                vr_post_process = gr.Checkbox(value=True, label="Post Process", info="Enable post-processing.")
+                vr_post_process_threshold = gr.Slider(minimum=0.1, maximum=0.3, step=0.1, value=0.2, label="Post Process Threshold", info="Threshold for post-processing.")
+                vr_high_end_process = gr.Checkbox(value=False, label="High End Process", info="Mirror the missing frequency range of the output.")
         with gr.Row():
-            vr_model = gr.Dropdown(label="Select the Model", choices=VR_ARCH_MODELS)
-        with gr.Row():
-            vr_window_size = gr.Dropdown(minimum=320, maximum=1024, step=32, value=512, label="Window Size")
-            vr_aggression = gr.Slider(minimum=1, maximum=50, step=1, value=5, label="Agression", info="Intensity of primary stem extraction.")
-            vr_tta = gr.Checkbox(value=True, label="TTA", info="Enable Test-Time-Augmentation; slow but improves quality.")
-            vr_post_process = gr.Checkbox(value=True, label="Post Process", info="Enable post-processing.")
-            vr_post_process_threshold = gr.Slider(minimum=0.1, maximum=0.3, step=0.1, value=0.2, label="Post Process Threshold", info="Threshold for post-processing.")
-            vr_high_end_process = gr.Checkbox(value=False, label="High End Process", info="Mirror the missing frequency range of the output.")
-        with gr.Row():
-            vr_audio = gr.Audio(label="Input Audio", type="numpy")
+            vr_audio = gr.Audio(label="Input Audio", type="filepath")
         with gr.Row():
             vr_button = gr.Button("Separate!", variant="primary")
         with gr.Row():
@@ -303,15 +355,16 @@ with gr.Blocks(title="🎵 Audio Separator 🎵", css="footer{display:none !impo
             vr_stem2 = gr.Audio(label="Stem 2", type="filepath", interactive=False)
 
     with gr.Tab("Demucs"):
+        with gr.Group():
+            with gr.Row():
+                demucs_model = gr.Dropdown(label="Select the Model", choices=DEMUCS_MODELS)
+            with gr.Row():
+                demucs_seg_size = gr.Slider(minimum=1, maximum=100, step=1, value=50, label="Segment Size")
+                demucs_shifts = gr.Slider(minimum=0, maximum=20, step=1, value=2, label="Shifts", info="Number of predictions with random shifts, higher = slower but better quality.")
+                demucs_overlap = gr.Slider(minimum=0.001, maximum=0.999, step=0.001, value=0.25, label="Overlap")
+                demucs_segments_enabled = gr.Checkbox(value=True, label="Segment-wise processing")
         with gr.Row():
-            demucs_model = gr.Dropdown(label="Select the Model", choices=DEMUCS_MODELS)
-        with gr.Row():
-            demucs_seg_size = gr.Slider(minimum=1, maximum=100, step=1, value=50, label="Segment Size")
-            demucs_shifts = gr.Slider(minimum=0, maximum=20, step=1, value=2, label="Shifts", info="Number of predictions with random shifts, higher = slower but better quality.")
-            demucs_overlap = gr.Slider(minimum=0.001, maximum=0.999, step=0.001, value=0.25, label="Overlap")
-            demucs_segments_enabled = gr.Checkbox(value=True, label="Segment-wise processing")
-        with gr.Row():
-            demucs_audio = gr.Audio(label="Input Audio", type="numpy")
+            demucs_audio = gr.Audio(label="Input Audio", type="filepath")
         with gr.Row():
             demucs_button = gr.Button("Separate!", variant="primary")
         with gr.Row():
