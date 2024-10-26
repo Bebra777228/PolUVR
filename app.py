@@ -4,11 +4,6 @@ import gradio as gr
 
 from audio_separator.separator import Separator
 
-# Constants
-MODEL_DIR = "/tmp/audio-separator-models/"
-OUTPUT_DIR = "/content/output"
-OUTPUT_FORMATS = ["wav", "flac", "mp3"]
-
 # Model lists
 ROFORMER_MODELS = {
     'BS-Roformer-Viperx-1297.ckpt': 'model_bs_roformer_ep_317_sdr_12.9755.ckpt',
@@ -102,6 +97,17 @@ DEMUCS_MODELS = [
     'hdemucs_mmi.yaml',
 ]
 
+def rename_stems(input_file, output_dir, stems, output_format):
+    """Rename stems to the format of the input file name with __(StemX) suffix."""
+    base_name = os.path.splitext(os.path.basename(input_file))[0]
+    renamed_stems = []
+    for i, stem in enumerate(stems):
+        new_name = f"{base_name}_(Stem{i+1}).{output_format}"
+        new_path = os.path.join(output_dir, new_name)
+        os.rename(stem, new_path)
+        renamed_stems.append(new_path)
+    return renamed_stems
+
 def roformer_separator(audio, model, seg_size, overlap, model_dir, out_dir, out_format, norm_thresh, amp_thresh):
     """Separate audio using Roformer model."""
     with tempfile.TemporaryDirectory() as tmp_dir:
@@ -121,12 +127,9 @@ def roformer_separator(audio, model, seg_size, overlap, model_dir, out_dir, out_
         separator.load_model(model_filename=model)
         separation = separator.separate(audio)
 
-        stem1_file = os.path.join(out_dir, os.path.basename(separation[0]))
-        stem2_file = os.path.join(out_dir, os.path.basename(separation[1]))
-        os.rename(separation[0], stem1_file)
-        os.rename(separation[1], stem2_file)
+        stems = rename_stems(audio, out_dir, separation, out_format)
 
-        return stem1_file, stem2_file
+        return stems[0], stems[1]
 
 def mdx23c_separator(audio, model, seg_size, overlap, model_dir, out_dir, out_format, norm_thresh, amp_thresh):
     """Separate audio using MDX23C model."""
@@ -147,12 +150,9 @@ def mdx23c_separator(audio, model, seg_size, overlap, model_dir, out_dir, out_fo
         separator.load_model(model_filename=model)
         separation = separator.separate(audio)
 
-        stem1_file = os.path.join(out_dir, os.path.basename(separation[0]))
-        stem2_file = os.path.join(out_dir, os.path.basename(separation[1]))
-        os.rename(separation[0], stem1_file)
-        os.rename(separation[1], stem2_file)
+        stems = rename_stems(audio, out_dir, separation, out_format)
 
-        return stem1_file, stem2_file
+        return stems[0], stems[1]
 
 def mdx_separator(audio, model, hop_length, seg_size, overlap, denoise, model_dir, out_dir, out_format, norm_thresh, amp_thresh):
     """Separate audio using MDX-NET model."""
@@ -175,12 +175,9 @@ def mdx_separator(audio, model, hop_length, seg_size, overlap, denoise, model_di
         separator.load_model(model_filename=model)
         separation = separator.separate(audio)
 
-        stem1_file = os.path.join(out_dir, os.path.basename(separation[0]))
-        stem2_file = os.path.join(out_dir, os.path.basename(separation[1]))
-        os.rename(separation[0], stem1_file)
-        os.rename(separation[1], stem2_file)
+        stems = rename_stems(audio, out_dir, separation, out_format)
 
-        return stem1_file, stem2_file
+        return stems[0], stems[1]
 
 def vr_separator(audio, model, window_size, aggression, tta, post_process, post_process_threshold, high_end_process, model_dir, out_dir, out_format, norm_thresh, amp_thresh):
     """Separate audio using VR ARCH model."""
@@ -205,12 +202,9 @@ def vr_separator(audio, model, window_size, aggression, tta, post_process, post_
         separator.load_model(model_filename=model)
         separation = separator.separate(audio)
 
-        stem1_file = os.path.join(out_dir, os.path.basename(separation[0]))
-        stem2_file = os.path.join(out_dir, os.path.basename(separation[1]))
-        os.rename(separation[0], stem1_file)
-        os.rename(separation[1], stem2_file)
+        stems = rename_stems(audio, out_dir, separation, out_format)
 
-        return stem1_file, stem2_file
+        return stems[0], stems[1]
 
 def demucs_separator(audio, model, seg_size, shifts, overlap, segments_enabled, model_dir, out_dir, out_format, norm_thresh, amp_thresh):
     """Separate audio using Demucs model."""
@@ -232,23 +226,16 @@ def demucs_separator(audio, model, seg_size, shifts, overlap, segments_enabled, 
         separator.load_model(model_filename=model)
         separation = separator.separate(audio)
 
-        stem1_file = os.path.join(out_dir, os.path.basename(separation[0]))
-        stem2_file = os.path.join(out_dir, os.path.basename(separation[1]))
-        stem3_file = os.path.join(out_dir, os.path.basename(separation[2]))
-        stem4_file = os.path.join(out_dir, os.path.basename(separation[3]))
-        os.rename(separation[0], stem1_file)
-        os.rename(separation[1], stem2_file)
-        os.rename(separation[2], stem3_file)
-        os.rename(separation[3], stem4_file)
+        stems = rename_stems(audio, out_dir, separation, out_format)
 
-        return stem1_file, stem2_file, stem3_file, stem4_file
+        return stems[0], stems[1], stems[2], stems[3]
 
 with gr.Blocks(title="🎵 Audio Separator 🎵", css="footer{display:none !important}") as app:
     with gr.Accordion("General settings", open=False):
-        model_file_dir = gr.Textbox(value=MODEL_DIR, label="Directory for storing model files", placeholder=MODEL_DIR)
+        model_file_dir = gr.Textbox(value="/tmp/audio-separator-models/", label="Directory for storing model files", placeholder="/tmp/audio-separator-models/")
         with gr.Row():
-            output_dir = gr.Textbox(value=OUTPUT_DIR, label="File output directory", placeholder=OUTPUT_DIR)
-            output_format = gr.Dropdown(value="wav", choices=OUTPUT_FORMATS, label="Output Format")
+            output_dir = gr.Textbox(value="/content/output", label="File output directory", placeholder="/content/output")
+            output_format = gr.Dropdown(value="wav", choices=["wav", "flac", "mp3"], label="Output Format")
         with gr.Row():
             norm_threshold = gr.Slider(value=0.9, step=0.1, minimum=0, maximum=1, label="Normalization", info="max peak amplitude to normalize input and output audio.")
             amp_threshold = gr.Slider(value=0.6, step=0.1, minimum=0, maximum=1, label="Amplification", info="min peak amplitude to amplify input and output audio.")
