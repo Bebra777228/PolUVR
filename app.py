@@ -105,166 +105,193 @@ def rename_stems(input_file, output_dir, stems, output_format):
     for i, stem in enumerate(stems):
         new_name = f"{base_name}_(Stem{i+1}).{output_format}"
         new_path = os.path.join(output_dir, new_name)
-        os.rename(os.path.join(output_dir, stem), new_path)
-        renamed_stems.append(new_path)
+        try:
+            os.rename(os.path.join(output_dir, stem), new_path)
+            renamed_stems.append(new_path)
+        except Exception as e:
+            logging.error(f"Failed to rename stem {stem}: {e}")
     return renamed_stems
 
 def prepare_output_dir(input_file, output_dir):
     """Create a directory for the output files and clean it if it already exists."""
     base_name = os.path.splitext(os.path.basename(input_file))[0]
     out_dir = os.path.join(output_dir, base_name)
-    if os.path.exists(out_dir):
-        shutil.rmtree(out_dir)
-    os.makedirs(out_dir)
+    try:
+        if os.path.exists(out_dir):
+            shutil.rmtree(out_dir)
+        os.makedirs(out_dir)
+    except Exception as e:
+        logging.error(f"Failed to prepare output directory {out_dir}: {e}")
+        raise
     return out_dir
 
 def roformer_separator(audio, model_key, seg_size, overlap, model_dir, out_dir, out_format, norm_thresh, amp_thresh, progress=gr.Progress()):
     """Separate audio using Roformer model."""
     model = ROFORMER_MODELS[model_key]
-    out_dir = prepare_output_dir(audio, out_dir)
-    separator = Separator(
-        log_level=logging.WARNING,
-        model_file_dir=model_dir,
-        output_dir=out_dir,
-        output_format=out_format,
-        normalization_threshold=norm_thresh,
-        amplification_threshold=amp_thresh,
-        mdxc_params={
-            "batch_size": 1,
-            "segment_size": seg_size,
-            "overlap": overlap,
-        }
-    )
+    try:
+        out_dir = prepare_output_dir(audio, out_dir)
+        separator = Separator(
+            log_level=logging.WARNING,
+            model_file_dir=model_dir,
+            output_dir=out_dir,
+            output_format=out_format,
+            normalization_threshold=norm_thresh,
+            amplification_threshold=amp_thresh,
+            mdxc_params={
+                "batch_size": 1,
+                "segment_size": seg_size,
+                "overlap": overlap,
+            }
+        )
 
-    progress(0.2, desc="Model loaded")
-    separator.load_model(model_filename=model)
+        progress(0.2, desc="Model loaded")
+        separator.load_model(model_filename=model)
 
-    progress(0.7, desc="Audio separated")
-    separation = separator.separate(audio)
+        progress(0.7, desc="Audio separated")
+        separation = separator.separate(audio)
 
-    progress(0.9, desc="Stems renamed")
-    stems = rename_stems(audio, out_dir, separation, out_format)
+        progress(0.9, desc="Stems renamed")
+        stems = rename_stems(audio, out_dir, separation, out_format)
 
-    return stems[0], stems[1]
+        return stems[0], stems[1]
+    except Exception as e:
+        logging.error(f"Roformer separation failed: {e}")
+        return None, None
 
 def mdx23c_separator(audio, model, seg_size, overlap, model_dir, out_dir, out_format, norm_thresh, amp_thresh, progress=gr.Progress()):
     """Separate audio using MDX23C model."""
-    out_dir = prepare_output_dir(audio, out_dir)
-    separator = Separator(
-        log_level=logging.WARNING,
-        model_file_dir=model_dir,
-        output_dir=out_dir,
-        output_format=out_format,
-        normalization_threshold=norm_thresh,
-        amplification_threshold=amp_thresh,
-        mdxc_params={
-            "batch_size": 1,
-            "segment_size": seg_size,
-            "overlap": overlap,
-        }
-    )
+    try:
+        out_dir = prepare_output_dir(audio, out_dir)
+        separator = Separator(
+            log_level=logging.WARNING,
+            model_file_dir=model_dir,
+            output_dir=out_dir,
+            output_format=out_format,
+            normalization_threshold=norm_thresh,
+            amplification_threshold=amp_thresh,
+            mdxc_params={
+                "batch_size": 1,
+                "segment_size": seg_size,
+                "overlap": overlap,
+            }
+        )
 
-    progress(0.2, desc="Model loaded")
-    separator.load_model(model_filename=model)
+        progress(0.2, desc="Model loaded")
+        separator.load_model(model_filename=model)
 
-    progress(0.7, desc="Audio separated")
-    separation = separator.separate(audio)
+        progress(0.7, desc="Audio separated")
+        separation = separator.separate(audio)
 
-    progress(0.9, desc="Stems renamed")
-    stems = rename_stems(audio, out_dir, separation, out_format)
+        progress(0.9, desc="Stems renamed")
+        stems = rename_stems(audio, out_dir, separation, out_format)
 
-    return stems[0], stems[1]
+        return stems[0], stems[1]
+    except Exception as e:
+        logging.error(f"MDX23C separation failed: {e}")
+        return None, None
 
 def mdx_separator(audio, model, hop_length, seg_size, overlap, denoise, model_dir, out_dir, out_format, norm_thresh, amp_thresh, progress=gr.Progress()):
     """Separate audio using MDX-NET model."""
-    out_dir = prepare_output_dir(audio, out_dir)
-    separator = Separator(
-        log_level=logging.WARNING,
-        model_file_dir=model_dir,
-        output_dir=out_dir,
-        output_format=out_format,
-        normalization_threshold=norm_thresh,
-        amplification_threshold=amp_thresh,
-        mdx_params={
-            "batch_size": 1,
-            "hop_length": hop_length,
-            "segment_size": seg_size,
-            "overlap": overlap,
-            "enable_denoise": denoise,
-        }
-    )
+    try:
+        out_dir = prepare_output_dir(audio, out_dir)
+        separator = Separator(
+            log_level=logging.WARNING,
+            model_file_dir=model_dir,
+            output_dir=out_dir,
+            output_format=out_format,
+            normalization_threshold=norm_thresh,
+            amplification_threshold=amp_thresh,
+            mdx_params={
+                "batch_size": 1,
+                "hop_length": hop_length,
+                "segment_size": seg_size,
+                "overlap": overlap,
+                "enable_denoise": denoise,
+            }
+        )
 
-    progress(0.2, desc="Model loaded")
-    separator.load_model(model_filename=model)
+        progress(0.2, desc="Model loaded")
+        separator.load_model(model_filename=model)
 
-    progress(0.7, desc="Audio separated")
-    separation = separator.separate(audio)
+        progress(0.7, desc="Audio separated")
+        separation = separator.separate(audio)
 
-    progress(0.9, desc="Stems renamed")
-    stems = rename_stems(audio, out_dir, separation, out_format)
+        progress(0.9, desc="Stems renamed")
+        stems = rename_stems(audio, out_dir, separation, out_format)
 
-    return stems[0], stems[1]
+        return stems[0], stems[1]
+    except Exception as e:
+        logging.error(f"MDX-NET separation failed: {e}")
+        return None, None
 
 def vr_separator(audio, model, window_size, aggression, tta, post_process, post_process_threshold, high_end_process, model_dir, out_dir, out_format, norm_thresh, amp_thresh, progress=gr.Progress()):
     """Separate audio using VR ARCH model."""
-    out_dir = prepare_output_dir(audio, out_dir)
-    separator = Separator(
-        log_level=logging.WARNING,
-        model_file_dir=model_dir,
-        output_dir=out_dir,
-        output_format=out_format,
-        normalization_threshold=norm_thresh,
-        amplification_threshold=amp_thresh,
-        vr_params={
-            "batch_size": 1,
-            "window_size": window_size,
-            "aggression": aggression,
-            "enable_tta": tta,
-            "enable_post_process": post_process,
-            "post_process_threshold": post_process_threshold,
-            "high_end_process": high_end_process,
-        }
-    )
+    try:
+        out_dir = prepare_output_dir(audio, out_dir)
+        separator = Separator(
+            log_level=logging.WARNING,
+            model_file_dir=model_dir,
+            output_dir=out_dir,
+            output_format=out_format,
+            normalization_threshold=norm_thresh,
+            amplification_threshold=amp_thresh,
+            vr_params={
+                "batch_size": 1,
+                "window_size": window_size,
+                "aggression": aggression,
+                "enable_tta": tta,
+                "enable_post_process": post_process,
+                "post_process_threshold": post_process_threshold,
+                "high_end_process": high_end_process,
+            }
+        )
 
-    progress(0.2, desc="Model loaded")
-    separator.load_model(model_filename=model)
+        progress(0.2, desc="Model loaded")
+        separator.load_model(model_filename=model)
 
-    progress(0.7, desc="Audio separated")
-    separation = separator.separate(audio)
+        progress(0.7, desc="Audio separated")
+        separation = separator.separate(audio)
 
-    progress(0.9, desc="Stems renamed")
-    stems = rename_stems(audio, out_dir, separation, out_format)
+        progress(0.9, desc="Stems renamed")
+        stems = rename_stems(audio, out_dir, separation, out_format)
 
-    return stems[0], stems[1]
+        return stems[0], stems[1]
+    except Exception as e:
+        logging.error(f"VR ARCH separation failed: {e}")
+        return None, None
 
 def demucs_separator(audio, model, seg_size, shifts, overlap, segments_enabled, model_dir, out_dir, out_format, norm_thresh, amp_thresh, progress=gr.Progress()):
     """Separate audio using Demucs model."""
-    out_dir = prepare_output_dir(audio, out_dir)
-    separator = Separator(
-        log_level=logging.WARNING,
-        model_file_dir=model_dir,
-        output_dir=out_dir,
-        output_format=out_format,
-        normalization_threshold=norm_thresh,
-        amplification_threshold=amp_thresh,
-        demucs_params={
-            "segment_size": seg_size,
-            "shifts": shifts,
-            "overlap": overlap,
-            "segments_enabled": segments_enabled,
-        }
-    )
+    try:
+        out_dir = prepare_output_dir(audio, out_dir)
+        separator = Separator(
+            log_level=logging.WARNING,
+            model_file_dir=model_dir,
+            output_dir=out_dir,
+            output_format=out_format,
+            normalization_threshold=norm_thresh,
+            amplification_threshold=amp_thresh,
+            demucs_params={
+                "segment_size": seg_size,
+                "shifts": shifts,
+                "overlap": overlap,
+                "segments_enabled": segments_enabled,
+            }
+        )
 
-    progress(0.2, desc="Model loaded")
-    separator.load_model(model_filename=model)
+        progress(0.2, desc="Model loaded")
+        separator.load_model(model_filename=model)
 
-    progress(0.7, desc="Audio separated")
-    separation = separator.separate(audio)
+        progress(0.7, desc="Audio separated")
+        separation = separator.separate(audio)
 
-    progress(0.9, desc="Stems renamed")
-    stems = rename_stems(audio, out_dir, separation, out_format)
+        progress(0.9, desc="Stems renamed")
+        stems = rename_stems(audio, out_dir, separation, out_format)
 
-    return stems[0], stems[1], stems[2], stems[3]
+        return stems[0], stems[1], stems[2], stems[3]
+    except Exception as e:
+        logging.error(f"Demucs separation failed: {e}")
+        return None, None, None, None
 
 with gr.Blocks(
     title="🎵 PolUVR - Politrees 🎵",
