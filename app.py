@@ -98,6 +98,15 @@ DEMUCS_MODELS = [
     'hdemucs_mmi.yaml',
 ]
 
+def print_message(input_file, model_name):
+    """Prints information about the audio separation process."""
+    base_name = os.path.splitext(os.path.basename(input_file))[0]
+    print("\n")
+    print("🎵 PolUVR 🎵")
+    print("Input audio:", base_name)
+    print("Separation Model:", model_name)
+    print("Audio Separation Process...")
+
 def rename_stems(input_file, output_dir, stems, output_format):
     """Rename stems to the format of the input file name with __(StemX) suffix."""
     base_name = os.path.splitext(os.path.basename(input_file))[0]
@@ -106,6 +115,7 @@ def rename_stems(input_file, output_dir, stems, output_format):
         new_name = f"{base_name}_(Stem{i+1}).{output_format}"
         new_path = os.path.join(output_dir, new_name)
         try:
+            print("Separation result:", new_name)
             os.rename(os.path.join(output_dir, stem), new_path)
             renamed_stems.append(new_path)
         except Exception as e:
@@ -127,6 +137,7 @@ def prepare_output_dir(input_file, output_dir):
 
 def roformer_separator(audio, model_key, seg_size, overlap, model_dir, out_dir, out_format, norm_thresh, amp_thresh, progress=gr.Progress()):
     """Separate audio using Roformer model."""
+    print_message(audio, model_key)
     model = ROFORMER_MODELS[model_key]
     try:
         out_dir = prepare_output_dir(audio, out_dir)
@@ -160,6 +171,7 @@ def roformer_separator(audio, model_key, seg_size, overlap, model_dir, out_dir, 
 
 def mdx23c_separator(audio, model, seg_size, overlap, model_dir, out_dir, out_format, norm_thresh, amp_thresh, progress=gr.Progress()):
     """Separate audio using MDX23C model."""
+    print_message(audio, model)
     try:
         out_dir = prepare_output_dir(audio, out_dir)
         separator = Separator(
@@ -192,6 +204,7 @@ def mdx23c_separator(audio, model, seg_size, overlap, model_dir, out_dir, out_fo
 
 def mdx_separator(audio, model, hop_length, seg_size, overlap, denoise, model_dir, out_dir, out_format, norm_thresh, amp_thresh, progress=gr.Progress()):
     """Separate audio using MDX-NET model."""
+    print_message(audio, model)
     try:
         out_dir = prepare_output_dir(audio, out_dir)
         separator = Separator(
@@ -226,6 +239,7 @@ def mdx_separator(audio, model, hop_length, seg_size, overlap, denoise, model_di
 
 def vr_separator(audio, model, window_size, aggression, tta, post_process, post_process_threshold, high_end_process, model_dir, out_dir, out_format, norm_thresh, amp_thresh, progress=gr.Progress()):
     """Separate audio using VR ARCH model."""
+    print_message(audio, model)
     try:
         out_dir = prepare_output_dir(audio, out_dir)
         separator = Separator(
@@ -262,6 +276,7 @@ def vr_separator(audio, model, window_size, aggression, tta, post_process, post_
 
 def demucs_separator(audio, model, seg_size, shifts, overlap, segments_enabled, model_dir, out_dir, out_format, norm_thresh, amp_thresh, progress=gr.Progress()):
     """Separate audio using Demucs model."""
+    print_message(audio, model)
     try:
         out_dir = prepare_output_dir(audio, out_dir)
         separator = Separator(
@@ -312,8 +327,8 @@ with gr.Blocks(
                 output_dir = gr.Textbox(value="output", label="File output directory", placeholder="output", interactive=False)
                 output_format = gr.Dropdown(value="wav", choices=["wav", "flac", "mp3"], label="Output Format")
             with gr.Row():
-                norm_threshold = gr.Slider(value=0.9, step=0.1, minimum=0, maximum=1, label="Normalization", info="max peak amplitude to normalize input and output audio.")
-                amp_threshold = gr.Slider(value=0.6, step=0.1, minimum=0, maximum=1, label="Amplification", info="min peak amplitude to amplify input and output audio.")
+                norm_threshold = gr.Slider(minimum=0.1, maximum=1, step=0.1, value=0.9, label="Normalization", info="max peak amplitude to normalize input and output audio.")
+                amp_threshold = gr.Slider(minimum=0.1, maximum=1, step=0.1, value=0.6, label="Amplification", info="min peak amplitude to amplify input and output audio.")
 
     with gr.Tab("Roformer"):
         with gr.Group():
