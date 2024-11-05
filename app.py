@@ -520,4 +520,8 @@ with gr.Blocks(
         outputs=[demucs_stem1, demucs_stem2, demucs_stem3, demucs_stem4, demucs_stem5, demucs_stem6],
     )
 
-app.launch(share=True)
+def main():
+    app.launch(share=True)
+
+if __name__ == "__main__":
+    main()
