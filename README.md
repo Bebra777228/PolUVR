@@ -74,7 +74,7 @@ Docker: `beveradb/audio-separator`
 
 💬 To test if `audio-separator` has been successfully configured to use FFmpeg, run `audio-separator --env_info`. The log will show `FFmpeg installed`.
 
-If you installed `audio-separator` using `conda` or `docker`, FFmpeg should already be avaialble in your environment.
+If you installed `audio-separator` using `conda` or `docker`, FFmpeg should already be available in your environment.
 
 You may need to separately install FFmpeg. It should be easy to install on most platforms, e.g.:
 
@@ -109,6 +109,17 @@ If you see the error `Failed to load library` or `cannot open shared object file
 You can install the CUDA 11 libraries _alongside_ CUDA 12 like so:
 `apt update; apt install nvidia-cuda-toolkit`
 
+If you encounter the following messages when running on Google Colab or in another environment:
+```
+[E:onnxruntime:Default, provider_bridge_ort.cc:1862 TryGetProviderInfo_CUDA] /onnxruntime_src/onnxruntime/core/session/provider_bridge_ort.cc:1539 onnxruntime::Provider& onnxruntime::ProviderLibrary::Get() [ONNXRuntimeError] : 1 : FAIL : Failed to load library libonnxruntime_providers_cuda.so with error: libcudnn_adv.so.9: cannot open shared object file: No such file or directory
+
+[W:onnxruntime:Default, onnxruntime_pybind_state.cc:993 CreateExecutionProviderInstance] Failed to create CUDAExecutionProvider. Require cuDNN 9.* and CUDA 12.*. Please install all dependencies as mentioned in the GPU requirements page (https://onnxruntime.ai/docs/execution-providers/CUDA-ExecutionProvider.html#requirements), make sure they're in the PATH, and that your GPU is supported.
+```
+You can resolve this by running the following command:
+```sh
+python -m pip install ort-nightly-gpu --index-url=https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/ort-cuda-12-nightly/pypi/simple/
+```
+
 > Note: if anyone knows how to make this cleaner so we can support both different platform-specific dependencies for hardware acceleration without a separate installation process for each, please let me know or raise a PR!
 
 ## Usage 🚀
@@ -133,7 +144,7 @@ Any file listed in the list models output can be specified (with file extension)
 
 ```sh
 usage: audio-separator [-h] [-v] [-d] [-e] [-l] [--log_level LOG_LEVEL] [-m MODEL_FILENAME] [--output_format OUTPUT_FORMAT] [--output_dir OUTPUT_DIR] [--model_file_dir MODEL_FILE_DIR] [--invert_spect]
-                       [--normalization NORMALIZATION] [--single_stem SINGLE_STEM] [--sample_rate SAMPLE_RATE] [--mdx_segment_size MDX_SEGMENT_SIZE] [--mdx_overlap MDX_OVERLAP] [--mdx_batch_size MDX_BATCH_SIZE]
+                       [--normalization NORMALIZATION] [--single_stem SINGLE_STEM] [--sample_rate SAMPLE_RATE] [--use_autocast] [--mdx_segment_size MDX_SEGMENT_SIZE] [--mdx_overlap MDX_OVERLAP] [--mdx_batch_size MDX_BATCH_SIZE]
                        [--mdx_hop_length MDX_HOP_LENGTH] [--mdx_enable_denoise] [--vr_batch_size VR_BATCH_SIZE] [--vr_window_size VR_WINDOW_SIZE] [--vr_aggression VR_AGGRESSION] [--vr_enable_tta]
                        [--vr_high_end_process] [--vr_enable_post_process] [--vr_post_process_threshold VR_POST_PROCESS_THRESHOLD] [--demucs_segment_size DEMUCS_SEGMENT_SIZE] [--demucs_shifts DEMUCS_SHIFTS]
                        [--demucs_overlap DEMUCS_OVERLAP] [--demucs_segments_enabled DEMUCS_SEGMENTS_ENABLED] [--mdxc_segment_size MDXC_SEGMENT_SIZE] [--mdxc_override_model_segment_size]
@@ -166,6 +177,7 @@ Common Separation Parameters:
   --normalization NORMALIZATION                          value by which to multiply the amplitude of the output files (default: 0.9). Example: --normalization=0.7
   --single_stem SINGLE_STEM                              output only single stem, e.g. Instrumental, Vocals, Drums, Bass, Guitar, Piano, Other. Example: --single_stem=Instrumental
   --sample_rate SAMPLE_RATE                              set the sample rate of the output audio (default: 44100). Example: --sample_rate=44100
+  --use_autocast                                         use PyTorch autocast for faster inference (default: False). Do not use for CPU inference. Example: --use_autocast
 
 MDX Architecture Parameters:
   --mdx_segment_size MDX_SEGMENT_SIZE                    larger consumes more resources, but may give better results (default: 256). Example: --mdx_segment_size=256
@@ -216,63 +228,6 @@ output_files = separator.separate('audio1.wav')
 print(f"Separation complete! Output file(s): {' '.join(output_files)}")
 ```
 
-#### Using different models to extract different stems
-
-Here's an example of how you can process a single input file with multiple different models to get desired results.
-
-This example [came from a user]([url](https://github.com/nomadkaraoke/python-audio-separator/issues/111#issuecomment-2353780618)) who wanted the following outputs:
-
-- `Vocals.wav`
-- `Instrumental.wav`
-- `Vocals (Reverb).wav`
-- `Vocals (No Reverb).wav`
-- `Lead Vocals.wav`
-- `Backing Vocals.wav`
-
-To achieve this, they used the following code, leveraging three different models in sequence and renaming the output files:
-
-```python
-import os
-from audio_separator.separator import Separator
-
-input = "/content/input.mp3"
-output = "/content/output"
-
-separator = Separator(output_dir=output)
-
-# Vocals and Instrumental
-vocals = os.path.join(output, 'Vocals.wav')
-instrumental = os.path.join(output, 'Instrumental.wav')
-
-# Vocals with Reverb and Vocals without Reverb
-vocals_reverb = os.path.join(output, 'Vocals (Reverb).wav')
-vocals_no_reverb = os.path.join(output, 'Vocals (No Reverb).wav')
-
-# Lead Vocals and Backing Vocals
-lead_vocals = os.path.join(output, 'Lead Vocals.wav')
-backing_vocals = os.path.join(output, 'Backing Vocals.wav')
-
-# Splitting a track into Vocal and Instrumental
-separator.load_model(model_filename='model_bs_roformer_ep_317_sdr_12.9755.ckpt')
-voc_inst = separator.separate(input)
-os.rename(os.path.join(output, voc_inst[0]), instrumental) # Rename file to “Instrumental.wav”
-os.rename(os.path.join(output, voc_inst[1]), vocals) # Rename file to “Vocals.wav”
-
-# Applying DeEcho-DeReverb to Vocals
-separator.load_model(model_filename='UVR-DeEcho-DeReverb.pth')
-voc_no_reverb = separator.separate(vocals)
-os.rename(os.path.join(output, voc_no_reverb[0]), vocals_no_reverb) # Rename file to “Vocals (No Reverb).wav”
-os.rename(os.path.join(output, voc_no_reverb[1]), vocals_reverb) # Rename file to “Vocals (Reverb).wav”
-
-# Separating Back Vocals from Main Vocals
-separator.load_model(model_filename='mel_band_roformer_karaoke_aufr33_viperx_sdr_10.1956.ckpt')
-backing_voc = separator.separate(vocals_no_reverb)
-os.rename(os.path.join(output, backing_voc[0]), backing_vocals) # Rename file to “Backing Vocals.wav”
-os.rename(os.path.join(output, backing_voc[1]), lead_vocals) # Rename file to “Lead Vocals.wav”
-```
-
-Thanks to @Bebra777228 for contributing this example!
-
 #### Batch processing and processing with multiple models
 
 You can process multiple files without reloading the model to save time and memory.
@@ -302,6 +257,27 @@ output_file_paths_5 = separator.separate('audio2.wav')
 output_file_paths_6 = separator.separate('audio3.wav')
 ```
 
+#### Renaming Stems
+
+You can rename the output files by specifying the desired names. For example:
+```python
+output_files = separator.separate('audio1.wav', 'stem1', 'stem2')
+```
+In this case, the output file names will be: `stem1.wav` and `stem2.wav`.
+
+You can also rename specific stems:
+
+- To rename the primary stem:
+  ```python
+  output_files = separator.separate('audio1.wav', primary_output_name='stem1')
+  ```
+  > The output files will be named: `stem1.wav` and `audio1_(Instrumental)_model_mel_band_roformer_ep_3005_sdr_11.wav`
+- To rename the secondary stem:
+  ```python
+  output_files = separator.separate('audio1.wav', secondary_output_name='stem2')
+  ```
+  > The output files will be named: `audio1_(Vocals)_model_mel_band_roformer_ep_3005_sdr_11.wav` and `stem2.wav`
+
 ## Parameters for the Separator class
 
 - log_level: (Optional) Logging level, e.g., INFO, DEBUG, WARNING. Default: logging.INFO
@@ -314,10 +290,12 @@ output_file_paths_6 = separator.separate('audio3.wav')
 - output_single_stem: (Optional) Output only a single stem, such as 'Instrumental' and 'Vocals'. Default: None
 - invert_using_spec: (Optional) Flag to invert using spectrogram. Default: False
 - sample_rate: (Optional) Set the sample rate of the output audio. Default: 44100
-- use_soundfile: (Optional) Use soundfile for output writing, can solve OOM issues, especially on longer audio. 
-- mdx_params: (Optional) MDX Architecture Specific Attributes & Defaults. Default: {"hop_length": 1024, "segment_size": 256, "overlap": 0.25, "batch_size": 1}
+- use_soundfile: (Optional) Use soundfile for output writing, can solve OOM issues, especially on longer audio.
+- use_autocast: (Optional) Flag to use PyTorch autocast for faster inference. Do not use for CPU inference. Default: False
+- mdx_params: (Optional) MDX Architecture Specific Attributes & Defaults. Default: {"hop_length": 1024, "segment_size": 256, "overlap": 0.25, "batch_size": 1, "enable_denoise": False}
 - vr_params: (Optional) VR Architecture Specific Attributes & Defaults. Default: {"batch_size": 1, "window_size": 512, "aggression": 5, "enable_tta": False, "enable_post_process": False, "post_process_threshold": 0.2, "high_end_process": False}
-- demucs_params: (Optional) VR Architecture Specific Attributes & Defaults. {"segment_size": "Default", "shifts": 2, "overlap": 0.25, "segments_enabled": True}
+- demucs_params: (Optional) Demucs Architecture Specific Attributes & Defaults. {"segment_size": "Default", "shifts": 2, "overlap": 0.25, "segments_enabled": True}
+- mdxc_params: (Optional) MDXC Architecture Specific Attributes & Defaults. Default: {"segment_size": 256, "override_model_segment_size": False, "batch_size": 1, "overlap": 8, "pitch_shift": 0}
 
 ## Requirements 📋
 

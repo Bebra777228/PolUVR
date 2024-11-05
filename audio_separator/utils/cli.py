@@ -17,7 +17,7 @@ def main():
 
     parser = argparse.ArgumentParser(description="Separate audio file into different stems.", formatter_class=lambda prog: argparse.RawTextHelpFormatter(prog, max_help_position=60))
 
-    parser.add_argument("audio_file", nargs="?", help="The audio file path to separate, in any common format.", default=argparse.SUPPRESS)
+    parser.add_argument("audio_files", nargs="*", help="The audio file paths to separate, in any common format.", default=argparse.SUPPRESS)
 
     package_version = metadata.distribution("audio-separator").version
 
@@ -42,7 +42,7 @@ def main():
     download_model_only_help = "Download a single model file only, without performing separation."
 
     io_params = parser.add_argument_group("Separation I/O Params")
-    io_params.add_argument("-m", "--model_filename", default="model_mel_band_roformer_ep_3005_sdr_11.4360.ckpt", help=model_filename_help)
+    io_params.add_argument("-m", "--model_filename", default="model_bs_roformer_ep_317_sdr_12.9755.yaml", help=model_filename_help)
     io_params.add_argument("--output_format", default="FLAC", help=output_format_help)
     io_params.add_argument("--output_bitrate", default=None, help=output_bitrate_help)
     io_params.add_argument("--output_dir", default=None, help=output_dir_help)
@@ -55,6 +55,9 @@ def main():
     single_stem_help = "output only single stem, e.g. Instrumental, Vocals, Drums, Bass, Guitar, Piano, Other. Example: --single_stem=Instrumental"
     sample_rate_help = "modify the sample rate of the output audio (default: %(default)s). Example: --sample_rate=44100"
     use_soundfile_help = "Use soundfile to write audio output (default: %(default)s). Example: --use_soundfile"
+    use_autocast_help = "use PyTorch autocast for faster inference (default: %(default)s). Do not use for CPU inference. Example: --use_autocast"
+    primary_output_name_help = "Custom name for the primary output file (default: %(default)s). Example: --primary_output_name=custom_primary_output"
+    secondary_output_name_help = "Custom name for the secondary output file (default: %(default)s). Example: --secondary_output_name=custom_secondary_output"
 
     common_params = parser.add_argument_group("Common Separation Parameters")
     common_params.add_argument("--invert_spect", action="store_true", help=invert_spect_help)
@@ -63,6 +66,9 @@ def main():
     common_params.add_argument("--single_stem", default=None, help=single_stem_help)
     common_params.add_argument("--sample_rate", type=int, default=44100, help=sample_rate_help)
     common_params.add_argument("--use_soundfile", action="store_true", help=use_soundfile_help)
+    common_params.add_argument("--use_autocast", action="store_true", help=use_autocast_help)
+    common_params.add_argument("--primary_output_name", default=None, help=primary_output_name_help)
+    common_params.add_argument("--secondary_output_name", default=None, help=secondary_output_name_help)
 
     mdx_segment_size_help = "larger consumes more resources, but may give better results (default: %(default)s). Example: --mdx_segment_size=256"
     mdx_overlap_help = "amount of overlap between prediction windows, 0.001-0.999. higher is better but slower (default: %(default)s). Example: --mdx_overlap=0.25"
@@ -145,11 +151,11 @@ def main():
         logger.info(f"Model {args.model_filename} downloaded successfully.")
         sys.exit(0)
 
-    if not hasattr(args, "audio_file"):
+    if not hasattr(args, "audio_files"):
         parser.print_help()
         sys.exit(1)
 
-    logger.info(f"Separator version {package_version} beginning with input file: {args.audio_file}")
+    logger.info(f"Separator version {package_version} beginning with input file(s): {', '.join(args.audio_files)}")
 
     separator = Separator(
         log_formatter=log_formatter,
@@ -163,6 +169,8 @@ def main():
         output_single_stem=args.single_stem,
         invert_using_spec=args.invert_spect,
         sample_rate=args.sample_rate,
+        use_soundfile=args.use_soundfile,
+        use_autocast=args.use_autocast,
         mdx_params={
             "hop_length": args.mdx_hop_length,
             "segment_size": args.mdx_segment_size,
@@ -196,6 +204,7 @@ def main():
 
     separator.load_model(model_filename=args.model_filename)
 
-    output_files = separator.separate(args.audio_file)
+    for audio_file in args.audio_files:
+        output_files = separator.separate(audio_file, primary_output_name=args.primary_output_name, secondary_output_name=args.secondary_output_name)
 
-    logger.info(f"Separation complete! Output file(s): {' '.join(output_files)}")
+        logger.info(f"Separation complete! Output file(s): {' '.join(output_files)}")

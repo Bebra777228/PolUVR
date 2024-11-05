@@ -15,6 +15,7 @@ import json
 import yaml
 import requests
 import torch
+import torch.amp.autocast_mode as autocast_mode
 import onnxruntime as ort
 from tqdm import tqdm
 
@@ -43,6 +44,7 @@ class Separator:
         invert_using_spec (bool): Flag to invert using spectrogram.
         sample_rate (int): The sample rate of the audio.
         use_soundfile (bool): Use soundfile for audio writing, can solve OOM issues.
+        use_autocast (bool): Flag to use PyTorch autocast for faster inference.
 
     MDX Architecture Specific Attributes:
         hop_length (int): The hop length for STFT.
@@ -61,7 +63,17 @@ class Separator:
         high_end_process: False
 
     Demucs Architecture Specific Attributes & Defaults:
-        model_path: The path to the Demucs model file.
+        segment_size: "Default"
+        shifts: 2
+        overlap: 0.25
+        segments_enabled: True
+        
+    MDXC Architecture Specific Attributes & Defaults:
+        segment_size: 256
+        override_model_segment_size: False
+        batch_size: 1
+        overlap: 8
+        pitch_shift: 0
     """
 
     def __init__(
@@ -78,10 +90,11 @@ class Separator:
         invert_using_spec=False,
         sample_rate=44100,
         use_soundfile=False,
+        use_autocast=False,
         mdx_params={"hop_length": 1024, "segment_size": 256, "overlap": 0.25, "batch_size": 1, "enable_denoise": False},
         vr_params={"batch_size": 1, "window_size": 512, "aggression": 5, "enable_tta": False, "enable_post_process": False, "post_process_threshold": 0.2, "high_end_process": False},
         demucs_params={"segment_size": "Default", "shifts": 2, "overlap": 0.25, "segments_enabled": True},
-        mdxc_params={"segment_size": 256, "batch_size": 1, "overlap": 8},
+        mdxc_params={"segment_size": 256, "override_model_segment_size": False, "batch_size": 1, "overlap": 8, "pitch_shift": 0},
     ):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(log_level)
@@ -150,6 +163,7 @@ class Separator:
             raise ValueError("The sample rate must be a non-zero whole number. Please provide a valid integer.")
         
         self.use_soundfile = use_soundfile
+        self.use_autocast = use_autocast
 
         # These are parameters which users may want to configure so we expose them to the top-level Separator class,
         # even though they are specific to a single model architecture
@@ -723,7 +737,7 @@ class Separator:
         self.logger.debug("Loading model completed.")
         self.logger.info(f'Load model duration: {time.strftime("%H:%M:%S", time.gmtime(int(time.perf_counter() - load_model_start_time)))}')
 
-    def separate(self, audio_file_path):
+    def separate(self, audio_file_path, primary_output_name=None, secondary_output_name=None):
         """
         Separates the audio file into different stems (e.g., vocals, instruments) using the loaded model.
 
@@ -733,10 +747,15 @@ class Separator:
 
         Parameters:
         - audio_file_path (str): The path to the audio file to be separated.
+        - primary_output_name (str, optional): Custom name for the primary output file. Defaults to None.
+        - secondary_output_name (str, optional): Custom name for the secondary output file. Defaults to None.
 
         Returns:
         - output_files (list of str): A list containing the paths to the separated audio stem files.
         """
+        if not (self.torch_device and self.model_instance):
+            raise ValueError("Initialization failed or model not loaded. Please load a model before attempting to separate.")
+
         # Starting the separation process
         self.logger.info(f"Starting separation process for audio_file_path: {audio_file_path}")
         separate_start_time = time.perf_counter()
@@ -744,8 +763,15 @@ class Separator:
         self.logger.debug(f"Normalization threshold set to {self.normalization_threshold}, waveform will lowered to this max amplitude to avoid clipping.")
         self.logger.debug(f"Amplification threshold set to {self.amplification_threshold}, waveform will scaled up to this max amplitude if below it.")
 
-        # Run separation method for the loaded model
-        output_files = self.model_instance.separate(audio_file_path)
+        # Run separation method for the loaded model with autocast enabled if supported by the device.
+        output_files = None
+        if self.use_autocast and autocast_mode.is_autocast_available(self.torch_device.type):
+            self.logger.debug("Autocast available.")
+            with autocast_mode.autocast(self.torch_device.type):
+                output_files = self.model_instance.separate(audio_file_path, primary_output_name, secondary_output_name)
+        else:
+            self.logger.debug("Autocast unavailable.")
+            output_files = self.model_instance.separate(audio_file_path, primary_output_name, secondary_output_name)
 
         # Clear GPU cache to free up memory
         self.model_instance.clear_gpu_cache()
