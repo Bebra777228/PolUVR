@@ -50,6 +50,7 @@ resampy = ">=0.4"
 beartype = "^0.18.5"
 rotary-embedding-torch = "^0.6.1"
 scipy = "^1.13.0"
+gradio = "*"
 
 [tool.poetry.extras]
 cpu = ["onnxruntime"]
@@ -57,6 +58,7 @@ gpu = ["onnxruntime-gpu"]
 
 [tool.poetry.scripts]
 audio-separator = 'audio_separator.utils.cli:main'
+audio-separator-app = 'audio_separator.app:main'
 
 [tool.poetry.group.dev.dependencies]
 black = ">=23"
@@ -65,4 +67,3 @@ pytest-cov = "^4.1.0"
 
 [tool.black]
 line-length = 140
-
