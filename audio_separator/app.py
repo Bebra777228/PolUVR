@@ -20,9 +20,10 @@ ROFORMER_MODELS = {
     'Mel-Roformer-Karaoke-Aufr33-Viperx.ckpt': 'mel_band_roformer_karaoke_aufr33_viperx_sdr_10.1956.ckpt',
     'Mel-Roformer-Denoise-Aufr33': 'denoise_mel_band_roformer_aufr33_sdr_27.9959.ckpt',
     'Mel-Roformer-Denoise-Aufr33-Aggr': 'denoise_mel_band_roformer_aufr33_aggr_sdr_27.9768.ckpt',
-    'MB-Roformer-Inst-v1 by Kim': 'melband_roformer_inst_v1.ckpt',
-    'MB-Roformer-InstVoc-Duality-v1 by Unwa': 'melband_roformer_instvoc_duality_v1.ckpt',
-    'MB-Roformer-InstVoc-Duality-v2 by Unwa': 'melband_roformer_instvox_duality_v2.ckpt',
+    'MelBand Roformer Kim | Inst V1 by Unwa': 'melband_roformer_inst_v1.ckpt',
+    'MelBand Roformer Kim | Inst V2 by Unwa': 'melband_roformer_inst_v2.ckpt',
+    'MelBand Roformer Kim | InstVoc Duality V1 by Unwa': 'melband_roformer_instvoc_duality_v1.ckpt',
+    'MelBand Roformer Kim | InstVoc Duality V2 by Unwa': 'melband_roformer_instvox_duality_v2.ckpt',
 }
 MDX23C_MODELS = [
     'MDX23C_D1581.ckpt',
