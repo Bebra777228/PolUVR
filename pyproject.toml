@@ -3,17 +3,17 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "audio-separator"
-version = "0.24.1"
+name = "PolUVR"
+version = "1.0.0"
 description = "Easy to use audio stem separation, using various models from UVR trained primarily by @Anjok07"
-authors = ["Andrew Beveridge <andrew@beveridge.uk>"]
+authors = ["Politrees"]
 license = "MIT"
 readme = "README.md"
 packages = [{include = "audio_separator"}]
 include = ["audio_separator/separator/models.json"]
-homepage = "https://github.com/karaokenerds/python-audio-separator"
-repository = "https://github.com/karaokenerds/python-audio-separator"
-documentation = "https://github.com/karaokenerds/python-audio-separator/blob/main/README.md"
+homepage = "https://github.com/Bebra777228/PolUVR"
+repository = "https://github.com/Bebra777228/PolUVR"
+documentation = "https://github.com/Bebra777228/PolUVR/blob/main/README.md"
 keywords = ["audio", "sound", "karaoke"]
 classifiers = [
     "License :: OSI Approved :: MIT License",
@@ -57,13 +57,9 @@ cpu = ["onnxruntime"]
 gpu = ["onnxruntime-gpu"]
 
 [tool.poetry.scripts]
-audio-separator = 'audio_separator.utils.cli:main'
-audio-separator-app = 'audio_separator.app:main'
+PolUVR = 'audio_separator.utils.cli:main'
+PolUVR-app = 'audio_separator.app:main'
 
 [tool.poetry.group.dev.dependencies]
-black = ">=23"
 pytest = "*"
 pytest-cov = "^4.1.0"
-
-[tool.black]
-line-length = 140
