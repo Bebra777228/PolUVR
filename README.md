@@ -1,121 +1,115 @@
-## This is a fork of this repository - https://github.com/nomadkaraoke/python-audio-separator
-
----
-
 # PolUVR 🎶
 
 [![PyPI version](https://badge.fury.io/py/PolUVR.svg)](https://badge.fury.io/py/PolUVR)
 
+## Overview
+
+PolUVR is a powerful audio separation tool that leverages advanced machine learning models to isolate different stems (e.g., vocals, instruments) from audio files. This repository is a fork of the original [python-audio-separator](https://github.com/nomadkaraoke/python-audio-separator) project.
+
 ## Installation 🛠️
 
-### 🎮 Nvidia GPU with CUDA or 🧪 Google Colab
+### Nvidia GPU with CUDA or Google Colab
 
 **Supported CUDA Versions:** 11.8 and 12.2
 
-💬 If successfully configured, you should see this log message when running `PolUVR --env_info`:
- `ONNXruntime has CUDAExecutionProvider available, enabling acceleration`
+To verify successful configuration, run `PolUVR --env_info` and look for the log message:
+`ONNXruntime has CUDAExecutionProvider available, enabling acceleration`.
 
-Pip:
 ```sh
 pip install "PolUVR[gpu]"
 ```
 
-###  Apple Silicon, macOS Sonoma+ with M1 or newer CPU (CoreML acceleration)
+### Apple Silicon, macOS Sonoma+ with M1 or newer CPU (CoreML acceleration)
 
-💬 If successfully configured, you should see this log message when running `PolUVR --env_info`:
- `ONNXruntime has CoreMLExecutionProvider available, enabling acceleration`
+To verify successful configuration, run `PolUVR --env_info` and look for the log message:
+`ONNXruntime has CoreMLExecutionProvider available, enabling acceleration`.
 
-Pip:
 ```sh
 pip install "PolUVR[cpu]"
 ```
 
-### 🐢 No hardware acceleration, CPU only
+### CPU-only (No hardware acceleration)
 
-Pip:
 ```sh
 pip install "PolUVR[cpu]"
 ```
 
-### 🎥 FFmpeg dependency
+### FFmpeg Dependency
 
-💬 To test if `PolUVR` has been successfully configured to use FFmpeg, run `PolUVR --env_info`. The log will show `FFmpeg installed`.
+To verify FFmpeg configuration, run `PolUVR --env_info` and look for the log message: `FFmpeg installed`.
 
-If you installed `PolUVR` using `conda` or `docker`, FFmpeg should already be available in your environment.
+If you installed `PolUVR` using `conda` or `docker`, FFmpeg should already be available. Otherwise, you may need to install it separately:
 
-You may need to separately install FFmpeg. It should be easy to install on most platforms, e.g.:
+- **Debian/Ubuntu:**
+  ```sh
+  apt-get update; apt-get install -y ffmpeg
+  ```
 
-🐧 Debian/Ubuntu:
+- **macOS:**
+  ```sh
+  brew update; brew install ffmpeg
+  ```
+
+## GPU / CUDA Specific Installation Steps with Pip
+
+In theory, installing `PolUVR` with the `[gpu]` extra should be sufficient. However, getting both PyTorch and ONNX Runtime working with CUDA support can sometimes be tricky.
+
+You may need to reinstall both packages directly, allowing pip to calculate the right versions for your platform:
+
 ```sh
-apt-get update; apt-get install -y ffmpeg
+pip uninstall torch onnxruntime
+pip cache purge
+pip install --force-reinstall torch torchvision torchaudio
+pip install --force-reinstall onnxruntime-gpu
 ```
 
- macOS:
-```sh
-brew update; brew install ffmpeg
-```
+For the latest version of PyTorch for your environment, use the command recommended by the wizard [here](https://pytorch.org/get-started/locally/).
 
-## GPU / CUDA specific installation steps with Pip
+### Multiple CUDA Library Versions
 
-In theory, all you should need to do to get `PolUVR` working with a GPU is install it with the `[gpu]` extra as above.
+Depending on your CUDA version and environment, you may need to install specific versions of CUDA libraries for ONNX Runtime to use your GPU.
 
-However, sometimes getting both PyTorch and ONNX Runtime working with CUDA support can be a bit tricky so it may not work that easily.
+For example, Google Colab now uses CUDA 12 by default, but ONNX Runtime still needs CUDA 11 libraries to work. If you encounter errors like `Failed to load library` or `cannot open shared object file`, you can install the CUDA 11 libraries alongside CUDA 12:
 
-You may need to reinstall both packages directly, allowing pip to calculate the right versions for your platform, for example:
-
-- `pip uninstall torch onnxruntime`
-- `pip cache purge`
-- `pip install --force-reinstall torch torchvision torchaudio`
-- `pip install --force-reinstall onnxruntime-gpu`
-
-I generally recommend installing the latest version of PyTorch for your environment using the command recommended by the wizard here:
-<https://pytorch.org/get-started/locally/>
-
-### Multiple CUDA library versions may be needed
-
-Depending on your CUDA version and environment, you may need to install specific version(s) of CUDA libraries for ONNX Runtime to use your GPU.
-
-🧪 Google Colab, for example, now uses CUDA 12 by default, but ONNX Runtime still needs CUDA 11 libraries to work.
-
-If you see the error `Failed to load library` or `cannot open shared object file` when you run `PolUVR`, this is likely the issue.
-
-You can install the CUDA 11 libraries _alongside_ CUDA 12 like so:
 ```sh
 apt update; apt install nvidia-cuda-toolkit
 ```
 
 If you encounter the following messages when running on Google Colab or in another environment:
+
 ```
 [E:onnxruntime:Default, provider_bridge_ort.cc:1862 TryGetProviderInfo_CUDA] /onnxruntime_src/onnxruntime/core/session/provider_bridge_ort.cc:1539 onnxruntime::Provider& onnxruntime::ProviderLibrary::Get() [ONNXRuntimeError] : 1 : FAIL : Failed to load library libonnxruntime_providers_cuda.so with error: libcudnn_adv.so.9: cannot open shared object file: No such file or directory
 
 [W:onnxruntime:Default, onnxruntime_pybind_state.cc:993 CreateExecutionProviderInstance] Failed to create CUDAExecutionProvider. Require cuDNN 9.* and CUDA 12.*. Please install all dependencies as mentioned in the GPU requirements page (https://onnxruntime.ai/docs/execution-providers/CUDA-ExecutionProvider.html#requirements), make sure they're in the PATH, and that your GPU is supported.
 ```
-You can resolve this by running the following command:
+
+You can resolve this by running:
+
 ```sh
 python -m pip install ort-nightly-gpu --index-url=https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/ort-cuda-12-nightly/pypi/simple/
 ```
-
-> Note: if anyone knows how to make this cleaner so we can support both different platform-specific dependencies for hardware acceleration without a separate installation process for each, please let me know or raise a PR!
 
 ## Usage 🚀
 
 ### Command Line Interface (CLI)
 
-You can use PolUVR via the command line, for example:
+You can use PolUVR via the command line. For example:
 
 ```sh
 PolUVR /path/to/your/input/audio.wav --model_filename UVR-MDX-NET-Inst_HQ_3.onnx
 ```
 
-This command will download the specified model file, process the `audio.wav` input audio and generate two new files in the current directory, one containing vocals and one containing instrumental.
+This command will download the specified model file, process the `audio.wav` input, and generate two new files in the current directory: one containing vocals and one containing instrumental.
 
-**Note:** You do not need to download any files yourself - PolUVR does that automatically for you!
+**Note:** You do not need to download any files yourself—PolUVR does that automatically for you!
 
-To see a list of supported models, run `PolUVR --list_models`
+To see a list of supported models, run:
 
-Any file listed in the list models output can be specified (with file extension) with the model_filename parameter (e.g. `--model_filename UVR_MDXNET_KARA_2.onnx`) and it will be automatically downloaded to the `--model_file_dir` (default: `/tmp/PolUVR-models/`) folder on first usage.
+```sh
+PolUVR --list_models
+```
 
-### Full command-line interface options
+### Full Command-Line Interface Options
 
 ```sh
 usage: PolUVR [-h] [-v] [-d] [-e] [-l] [--log_level LOG_LEVEL] [-m MODEL_FILENAME] [--output_format OUTPUT_FORMAT] [--output_dir OUTPUT_DIR] [--model_file_dir MODEL_FILE_DIR]
@@ -204,11 +198,9 @@ output_files = separator.separate('audio1.wav')
 print(f"Separation complete! Output file(s): {' '.join(output_files)}")
 ```
 
-#### Batch processing and processing with multiple models
+#### Batch Processing and Multiple Models
 
-You can process multiple files without reloading the model to save time and memory.
-
-You only need to load a model when choosing or changing models. See example below:
+You can process multiple files without reloading the model to save time and memory. You only need to load a model when choosing or changing models. See example below:
 
 ```python
 from PolUVR.separator import Separator
@@ -236,6 +228,7 @@ output_file_paths_6 = separator.separate('audio3.wav')
 #### Renaming Stems
 
 You can rename the output files by specifying the desired names. For example:
+
 ```python
 output_names = {
     "Vocals": "vocals_output",
@@ -243,6 +236,7 @@ output_names = {
 }
 output_files = separator.separate('audio1.wav', output_names)
 ```
+
 In this case, the output file names will be: `vocals_output.wav` and `instrumental_output.wav`.
 
 You can also rename specific stems:
@@ -255,6 +249,7 @@ You can also rename specific stems:
   output_files = separator.separate('audio1.wav', output_names)
   ```
   > The output files will be named: `vocals_output.wav` and `audio1_(Instrumental)_model_mel_band_roformer_ep_3005_sdr_11.wav`
+
 - To rename the Instrumental stem:
   ```python
   output_names = {
@@ -263,6 +258,7 @@ You can also rename specific stems:
   output_files = separator.separate('audio1.wav', output_names)
   ```
   > The output files will be named: `audio1_(Vocals)_model_mel_band_roformer_ep_3005_sdr_11.wav` and `instrumental_output.wav`
+
 - List of stems for Demucs models:
   - htdemucs_6s.yaml
     ```python
@@ -285,7 +281,7 @@ You can also rename specific stems:
     }
     ```
 
-## Parameters for the Separator class
+## Parameters for the Separator Class
 
 - **`log_level`:** (Optional) Logging level, e.g., INFO, DEBUG, WARNING. `Default: logging.INFO`
 - **`log_formatter`:** (Optional) The log format. Default: None, which falls back to '%(asctime)s - %(levelname)s - %(module)s - %(message)s'
@@ -306,18 +302,17 @@ You can also rename specific stems:
 
 ## Requirements 📋
 
-Python >= 3.10
-
-Libraries: torch, onnx, onnxruntime, numpy, librosa, requests, six, tqdm, pydub
+- Python >= 3.10
+- Libraries: torch, onnx, onnxruntime, numpy, librosa, requests, six, tqdm, pydub
 
 ## Developing Locally
 
-This project uses Poetry for dependency management and packaging. Follow these steps to setup a local development environment:
+This project uses Poetry for dependency management and packaging. Follow these steps to set up a local development environment:
 
 ### Prerequisites
 
-- Make sure you have Python 3.10 or newer installed on your machine.
-- Install Conda (I recommend Miniforge: [Miniforge GitHub](https://github.com/conda-forge/miniforge)) to manage your Python virtual environments
+- Ensure you have Python 3.10 or newer installed on your machine.
+- Install Conda (I recommend Miniforge: [Miniforge GitHub](https://github.com/conda-forge/miniforge)) to manage your Python virtual environments.
 
 ### Clone the Repository
 
@@ -330,7 +325,7 @@ cd PolUVR
 
 Replace `YOUR_USERNAME` with your GitHub username if you've forked the repository, or use the main repository URL if you have the permissions.
 
-### Create and activate the Conda Environment
+### Create and Activate the Conda Environment
 
 To create and activate the conda environment, use the following commands:
 
@@ -347,11 +342,14 @@ Once you're inside the conda env, run the following command to install the proje
 poetry install
 ```
 
-Install extra dependencies depending if you're running with GPU or CPU.
+Install extra dependencies depending on whether you're running with GPU or CPU:
+
 ```sh
 poetry install --extras "cpu"
 ```
+
 or
+
 ```sh
 poetry install --extras "gpu"
 ```
@@ -374,11 +372,11 @@ conda deactivate
 
 ## Contributing 🤝
 
-Contributions are very much welcome! Please fork the repository and submit a pull request with your changes, and I'll try to review, merge and publish promptly!
+Contributions are very much welcome! Please fork the repository and submit a pull request with your changes, and I'll try to review, merge, and publish promptly!
 
 - This project is 100% open-source and free for anyone to use and modify as they wish.
-- If the maintenance workload for this repo somehow becomes too much for me I'll ask for volunteers to share maintainership of the repo, though I don't think that is very likely
-- Development and support for the MDX-Net separation models is part of the main [UVR project](https://github.com/Anjok07/ultimatevocalremovergui), this repo is just a CLI/Python package wrapper to simplify running those models programmatically. So, if you want to try and improve the actual models, please get involved in the UVR project and look for guidance there!
+- If the maintenance workload for this repo somehow becomes too much for me, I'll ask for volunteers to share maintainership of the repo, though I don't think that is very likely.
+- Development and support for the MDX-Net separation models are part of the main [UVR project](https://github.com/Anjok07/ultimatevocalremovergui). This repo is just a CLI/Python package wrapper to simplify running those models programmatically. So, if you want to try and improve the actual models, please get involved in the UVR project and look for guidance there!
 
 ## Credits 🙏
 
@@ -388,3 +386,7 @@ Contributions are very much welcome! Please fork the repository and submit a pul
 - [KimberleyJSN](https://github.com/KimberleyJensen) - Advised and aided the implementation of the training scripts for MDX-Net and Demucs. Thank you!
 - [Hv](https://github.com/NaJeongMo/Colab-for-MDX_B) - Helped implement chunks into the MDX-Net AI code. Thank you!
 - [zhzhongshi](https://github.com/zhzhongshi) - Helped add support for the MDXC models in [`audio-separator`](https://github.com/nomadkaraoke/python-audio-separator). Thank you!
+
+## Original Repository
+
+This project is a fork of the original [python-audio-separator](https://github.com/nomadkaraoke/python-audio-separator) repository.
