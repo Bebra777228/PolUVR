@@ -4,57 +4,73 @@
 
 ## Overview
 
-PolUVR is a powerful audio separation tool that leverages advanced machine learning models to isolate different stems (e.g., vocals, instruments) from audio files. This repository is a fork of the original [python-audio-separator](https://github.com/nomadkaraoke/python-audio-separator) project.
+PolUVR is a Python-based audio separation tool that leverages advanced machine learning models to separate audio tracks into different stems, such as vocals, instrumental, drums, bass, and more. This project is a fork of the [python-audio-separator](https://github.com/nomadkaraoke/python-audio-separator) repository, and it aims to provide a user-friendly interface for audio separation tasks.
+
+---
 
 ## Installation 🛠️
 
-### Nvidia GPU with CUDA or Google Colab
+### Hardware Acceleration Options
+
+#### Nvidia GPU with CUDA
 
 **Supported CUDA Versions:** 11.8 and 12.2
 
-To verify successful configuration, run `PolUVR --env_info` and look for the log message:
-`ONNXruntime has CUDAExecutionProvider available, enabling acceleration`.
+To verify successful configuration, run `PolUVR --env_info`. You should see the following log message:
+```
+ONNXruntime has CUDAExecutionProvider available, enabling acceleration
+```
 
+**Installation:**
 ```sh
 pip install "PolUVR[gpu]"
 ```
 
-### Apple Silicon, macOS Sonoma+ with M1 or newer CPU (CoreML acceleration)
+#### Apple Silicon, macOS Sonoma+ with M1 or newer CPU (CoreML acceleration)
 
-To verify successful configuration, run `PolUVR --env_info` and look for the log message:
-`ONNXruntime has CoreMLExecutionProvider available, enabling acceleration`.
+To verify successful configuration, run `PolUVR --env_info`. You should see the following log message:
+```
+ONNXruntime has CoreMLExecutionProvider available, enabling acceleration
+```
 
+**Installation:**
 ```sh
 pip install "PolUVR[cpu]"
 ```
 
-### CPU-only (No hardware acceleration)
+#### CPU-Only (No Hardware Acceleration)
 
+**Installation:**
 ```sh
 pip install "PolUVR[cpu]"
 ```
+
+---
 
 ### FFmpeg Dependency
 
-To verify FFmpeg configuration, run `PolUVR --env_info` and look for the log message: `FFmpeg installed`.
+To check if `PolUVR` is correctly configured to use FFmpeg, run `PolUVR --env_info`. The log should show:
+```
+FFmpeg installed
+```
 
-If you installed `PolUVR` using `conda` or `docker`, FFmpeg should already be available. Otherwise, you may need to install it separately:
+If you installed `PolUVR` using `conda` or `docker`, FFmpeg should already be available in your environment. Otherwise, install FFmpeg manually:
 
-- **Debian/Ubuntu:**
-  ```sh
-  apt-get update; apt-get install -y ffmpeg
-  ```
+**Debian/Ubuntu:**
+```sh
+apt-get update; apt-get install -y ffmpeg
+```
 
-- **macOS:**
-  ```sh
-  brew update; brew install ffmpeg
-  ```
+**macOS:**
+```sh
+brew update; brew install ffmpeg
+```
 
-## GPU / CUDA Specific Installation Steps with Pip
+---
 
-In theory, installing `PolUVR` with the `[gpu]` extra should be sufficient. However, getting both PyTorch and ONNX Runtime working with CUDA support can sometimes be tricky.
+## GPU / CUDA Specific Installation Steps
 
-You may need to reinstall both packages directly, allowing pip to calculate the right versions for your platform:
+In theory, installing `PolUVR` with the `[gpu]` extra should suffice. However, sometimes PyTorch and ONNX Runtime with CUDA support can be tricky. You may need to reinstall these packages directly:
 
 ```sh
 pip uninstall torch onnxruntime
@@ -63,48 +79,37 @@ pip install --force-reinstall torch torchvision torchaudio
 pip install --force-reinstall onnxruntime-gpu
 ```
 
-For the latest version of PyTorch for your environment, use the command recommended by the wizard [here](https://pytorch.org/get-started/locally/).
+For the latest PyTorch version, use the command recommended by the [PyTorch installation wizard](https://pytorch.org/get-started/locally/).
 
 ### Multiple CUDA Library Versions
 
-Depending on your CUDA version and environment, you may need to install specific versions of CUDA libraries for ONNX Runtime to use your GPU.
-
-For example, Google Colab now uses CUDA 12 by default, but ONNX Runtime still needs CUDA 11 libraries to work. If you encounter errors like `Failed to load library` or `cannot open shared object file`, you can install the CUDA 11 libraries alongside CUDA 12:
+Depending on your environment, you may need specific CUDA library versions. For example, Google Colab uses CUDA 12 by default, but ONNX Runtime may still require CUDA 11 libraries. Install CUDA 11 libraries alongside CUDA 12:
 
 ```sh
 apt update; apt install nvidia-cuda-toolkit
 ```
 
-If you encounter the following messages when running on Google Colab or in another environment:
-
-```
-[E:onnxruntime:Default, provider_bridge_ort.cc:1862 TryGetProviderInfo_CUDA] /onnxruntime_src/onnxruntime/core/session/provider_bridge_ort.cc:1539 onnxruntime::Provider& onnxruntime::ProviderLibrary::Get() [ONNXRuntimeError] : 1 : FAIL : Failed to load library libonnxruntime_providers_cuda.so with error: libcudnn_adv.so.9: cannot open shared object file: No such file or directory
-
-[W:onnxruntime:Default, onnxruntime_pybind_state.cc:993 CreateExecutionProviderInstance] Failed to create CUDAExecutionProvider. Require cuDNN 9.* and CUDA 12.*. Please install all dependencies as mentioned in the GPU requirements page (https://onnxruntime.ai/docs/execution-providers/CUDA-ExecutionProvider.html#requirements), make sure they're in the PATH, and that your GPU is supported.
-```
-
-You can resolve this by running:
+If you encounter errors like `Failed to load library` or `cannot open shared object file`, resolve them by running:
 
 ```sh
 python -m pip install ort-nightly-gpu --index-url=https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/ort-cuda-12-nightly/pypi/simple/
 ```
 
+---
+
 ## Usage 🚀
 
 ### Command Line Interface (CLI)
 
-You can use PolUVR via the command line. For example:
+Separate an audio file using the default model:
 
 ```sh
 PolUVR /path/to/your/input/audio.wav --model_filename UVR-MDX-NET-Inst_HQ_3.onnx
 ```
 
-This command will download the specified model file, process the `audio.wav` input, and generate two new files in the current directory: one containing vocals and one containing instrumental.
+This command will download the specified model, process `audio.wav`, and generate two files: one for vocals and one for instrumental.
 
-**Note:** You do not need to download any files yourself—PolUVR does that automatically for you!
-
-To see a list of supported models, run:
-
+**List Supported Models:**
 ```sh
 PolUVR --list_models
 ```
@@ -179,20 +184,22 @@ MDXC Architecture Parameters:
   --mdxc_pitch_shift MDXC_PITCH_SHIFT                    Shift audio pitch by a number of semitones while processing. May improve output for deep/high vocals (default: 0). Example: --mdxc_pitch_shift=2
 ```
 
+---
+
 ### As a Dependency in a Python Project
 
-You can use PolUVR in your own Python project. Here's a minimal example using the default two stem (Instrumental and Vocals) model:
+Use PolUVR in your Python project with the following example:
 
 ```python
 from PolUVR.separator import Separator
 
-# Initialize the Separator class (with optional configuration properties, below)
+# Initialize the Separator class
 separator = Separator()
 
-# Load a machine learning model (if unspecified, defaults to 'model_mel_band_roformer_ep_3005_sdr_11.4360.ckpt')
+# Load a machine learning model
 separator.load_model()
 
-# Perform the separation on specific audio files without reloading the model
+# Perform separation on specific audio files
 output_files = separator.separate('audio1.wav')
 
 print(f"Separation complete! Output file(s): {' '.join(output_files)}")
@@ -200,26 +207,20 @@ print(f"Separation complete! Output file(s): {' '.join(output_files)}")
 
 #### Batch Processing and Multiple Models
 
-You can process multiple files without reloading the model to save time and memory. You only need to load a model when choosing or changing models. See example below:
+Process multiple files without reloading the model:
 
 ```python
 from PolUVR.separator import Separator
 
-# Initialize the Separator with other configuration properties, below
 separator = Separator()
-
-# Load a model
 separator.load_model(model_filename='UVR-MDX-NET-Inst_HQ_3.onnx')
 
-# Separate multiple audio files without reloading the model
 output_file_paths_1 = separator.separate('audio1.wav')
 output_file_paths_2 = separator.separate('audio2.wav')
 output_file_paths_3 = separator.separate('audio3.wav')
 
-# Load a different model
 separator.load_model(model_filename='UVR_MDXNET_KARA_2.onnx')
 
-# Separate the same files with the new model
 output_file_paths_4 = separator.separate('audio1.wav')
 output_file_paths_5 = separator.separate('audio2.wav')
 output_file_paths_6 = separator.separate('audio3.wav')
@@ -300,34 +301,30 @@ You can also rename specific stems:
 - **`demucs_params`:** (Optional) Demucs Architecture Specific Attributes & Defaults. `Default: {"segment_size": "Default", "shifts": 2, "overlap": 0.25, "segments_enabled": True}`
 - **`mdxc_params`:** (Optional) MDXC Architecture Specific Attributes & Defaults. `Default: {"segment_size": 256, "override_model_segment_size": False, "batch_size": 1, "overlap": 8, "pitch_shift": 0}`
 
+---
+
 ## Requirements 📋
 
 - Python >= 3.10
 - Libraries: torch, onnx, onnxruntime, numpy, librosa, requests, six, tqdm, pydub
 
-## Developing Locally
+---
 
-This project uses Poetry for dependency management and packaging. Follow these steps to set up a local development environment:
+## Developing Locally
 
 ### Prerequisites
 
-- Ensure you have Python 3.10 or newer installed on your machine.
-- Install Conda (I recommend Miniforge: [Miniforge GitHub](https://github.com/conda-forge/miniforge)) to manage your Python virtual environments.
+- Python 3.10 or newer
+- Conda (recommended: Miniforge)
 
 ### Clone the Repository
-
-Clone the repository to your local machine:
 
 ```sh
 git clone https://github.com/YOUR_USERNAME/PolUVR.git
 cd PolUVR
 ```
 
-Replace `YOUR_USERNAME` with your GitHub username if you've forked the repository, or use the main repository URL if you have the permissions.
-
 ### Create and Activate the Conda Environment
-
-To create and activate the conda environment, use the following commands:
 
 ```sh
 conda env create
@@ -336,27 +333,20 @@ conda activate PolUVR-dev
 
 ### Install Dependencies
 
-Once you're inside the conda env, run the following command to install the project dependencies:
-
 ```sh
 poetry install
 ```
 
-Install extra dependencies depending on whether you're running with GPU or CPU:
-
+Install extra dependencies:
 ```sh
 poetry install --extras "cpu"
 ```
-
 or
-
 ```sh
 poetry install --extras "gpu"
 ```
 
-### Running the Command-Line Interface Locally
-
-You can run the CLI command directly within the virtual environment. For example:
+### Running the CLI Locally
 
 ```sh
 PolUVR path/to/your/audio-file.wav
@@ -364,28 +354,26 @@ PolUVR path/to/your/audio-file.wav
 
 ### Deactivate the Virtual Environment
 
-Once you are done with your development work, you can exit the virtual environment by simply typing:
-
 ```sh
 conda deactivate
 ```
 
+---
+
 ## Contributing 🤝
 
-Contributions are very much welcome! Please fork the repository and submit a pull request with your changes, and I'll try to review, merge, and publish promptly!
-
-- This project is 100% open-source and free for anyone to use and modify as they wish.
-- If the maintenance workload for this repo somehow becomes too much for me, I'll ask for volunteers to share maintainership of the repo, though I don't think that is very likely.
-- Development and support for the MDX-Net separation models are part of the main [UVR project](https://github.com/Anjok07/ultimatevocalremovergui). This repo is just a CLI/Python package wrapper to simplify running those models programmatically. So, if you want to try and improve the actual models, please get involved in the UVR project and look for guidance there!
+Contributions are welcome! Fork the repository, make your changes, and submit a pull request.
 
 ## Credits 🙏
 
-- [Anjok07](https://github.com/Anjok07) - Author of [Ultimate Vocal Remover GUI](https://github.com/Anjok07/ultimatevocalremovergui), which almost all of the code in this repo was copied from! Definitely deserving of credit for anything good from this project. Thank you!
-- [DilanBoskan](https://github.com/DilanBoskan) - Your contributions at the start of this project were essential to the success of UVR. Thank you!
-- [Kuielab & Woosung Choi](https://github.com/kuielab) - Developed the original MDX-Net AI code.
-- [KimberleyJSN](https://github.com/KimberleyJensen) - Advised and aided the implementation of the training scripts for MDX-Net and Demucs. Thank you!
-- [Hv](https://github.com/NaJeongMo/Colab-for-MDX_B) - Helped implement chunks into the MDX-Net AI code. Thank you!
-- [zhzhongshi](https://github.com/zhzhongshi) - Helped add support for the MDXC models in [`audio-separator`](https://github.com/nomadkaraoke/python-audio-separator). Thank you!
+- [Anjok07](https://github.com/Anjok07) - Author of [Ultimate Vocal Remover GUI](https://github.com/Anjok07/ultimatevocalremovergui)
+- [DilanBoskan](https://github.com/DilanBoskan)
+- [Kuielab & Woosung Choi](https://github.com/kuielab)
+- [KimberleyJSN](https://github.com/KimberleyJensen)
+- [Hv](https://github.com/NaJeongMo/Colab-for-MDX_B)
+- [zhzhongshi](https://github.com/zhzhongshi)
+
+---
 
 ## Original Repository
 
