@@ -80,7 +80,7 @@ class Separator:
         self,
         log_level=logging.INFO,
         log_formatter=None,
-        model_file_dir="/tmp/audio-separator-models/",
+        model_file_dir="/tmp/PolUVR-models/",
         output_dir=None,
         output_format="WAV",
         output_bitrate=None,
@@ -340,7 +340,7 @@ class Separator:
 
     def list_supported_model_files(self):
         """
-        This method lists the supported model files for audio-separator, by fetching the same file UVR uses to list these.
+        This method lists the supported model files for PolUVR, by fetching the same file UVR uses to list these.
         """
         download_checks_path = os.path.join(self.model_file_dir, "download_checks.json")
 
@@ -409,7 +409,7 @@ class Separator:
         # Load the JSON file using importlib.resources
         with resources.open_text("PolUVR", "models.json") as f:
             audio_separator_models_list = json.load(f)
-        self.logger.debug(f"Audio-Separator model list loaded")
+        self.logger.debug(f"PolUVR model list loaded")
 
         # Return object with list of model names, which are the keys in vr_download_list, mdx_download_list, demucs_download_list, mdx23_download_list, mdx23c_download_list, grouped by type: VR, MDX, Demucs, MDX23, MDX23C
         model_files_grouped_by_type = {
@@ -461,7 +461,7 @@ class Separator:
                     try:
                         self.download_file_if_not_exists(f"{model_repo_url_prefix}/{model_filename}", model_path)
                     except RuntimeError:
-                        self.logger.debug("Model not found in UVR repo, attempting to download from audio-separator models repo...")
+                        self.logger.debug("Model not found in UVR repo, attempting to download from PolUVR models repo...")
                         self.download_file_if_not_exists(f"{audio_separator_models_repo_url_prefix}/{model_filename}", model_path)
 
                     self.print_uvr_vip_message()
@@ -498,7 +498,7 @@ class Separator:
                                     download_url = f"{model_repo_url_prefix}/{config_key}"
                                     self.download_file_if_not_exists(download_url, os.path.join(self.model_file_dir, config_key))
                                 except RuntimeError:
-                                    self.logger.debug("Model not found in UVR repo, attempting to download from audio-separator models repo...")
+                                    self.logger.debug("Model not found in UVR repo, attempting to download from PolUVR models repo...")
                                     download_url = f"{audio_separator_models_repo_url_prefix}/{config_key}"
                                     self.download_file_if_not_exists(download_url, os.path.join(self.model_file_dir, config_key))
 
@@ -520,7 +520,7 @@ class Separator:
                                     yaml_config_url = f"{model_data_url_prefix}/mdx_model_data/mdx_c_configs/{yaml_config_filename}"
                                     self.download_file_if_not_exists(f"{yaml_config_url}", yaml_config_filepath)
                                 except RuntimeError:
-                                    self.logger.debug("Model YAML config file not found in UVR repo, attempting to download from audio-separator models repo...")
+                                    self.logger.debug("Model YAML config file not found in UVR repo, attempting to download from PolUVR models repo...")
                                     yaml_config_url = f"{audio_separator_models_repo_url_prefix}/{yaml_config_filename}"
                                     self.download_file_if_not_exists(f"{yaml_config_url}", yaml_config_filepath)
 

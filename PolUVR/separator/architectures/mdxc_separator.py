@@ -108,7 +108,7 @@ class MDXCSeparator(CommonSeparator):
         except RuntimeError as e:
             self.logger.error(f"Error: {e}")
             self.logger.error("An error occurred while loading the model file. This often occurs when the model file is corrupt or incomplete.")
-            self.logger.error(f"Please try deleting the model file from {self.model_path} and run audio-separator again to re-download it.")
+            self.logger.error(f"Please try deleting the model file from {self.model_path} and run PolUVR again to re-download it.")
             sys.exit(1)
 
     def separate(self, audio_file_path, custom_output_names=None):

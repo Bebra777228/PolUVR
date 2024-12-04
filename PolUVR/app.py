@@ -110,7 +110,7 @@ def print_message(input_file, model_name):
     """Prints information about the audio separation process."""
     base_name = os.path.splitext(os.path.basename(input_file))[0]
     print("\n")
-    print("🎵 Audio-Separator 🎵")
+    print("🎵 PolUVR 🎵")
     print("Input audio:", base_name)
     print("Separation Model:", model_name)
     print("Audio Separation Process...")
@@ -324,7 +324,7 @@ with gr.Blocks(
     gr.HTML("<h1> 🎵 PolUVR 🎵 </h1>")
     with gr.Accordion("General settings", open=False):
         with gr.Group():
-            model_file_dir = gr.Textbox(value="/tmp/audio-separator-models/", label="Directory to cache model files", info="The directory where model files are stored.", placeholder="/tmp/audio-separator-models/")
+            model_file_dir = gr.Textbox(value="/tmp/PolUVR-models/", label="Directory to cache model files", info="The directory where model files are stored.", placeholder="/tmp/PolUVR-models/")
             with gr.Row():
                 output_dir = gr.Textbox(value="output", label="File output directory", info="The directory where output files will be saved.", placeholder="output")
                 output_format = gr.Dropdown(value="wav", choices=["wav", "flac", "mp3"], label="Output Format", info="The format of the output audio file.")

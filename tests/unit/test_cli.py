@@ -13,7 +13,7 @@ def common_expected_args():
     return {
         "log_formatter": mock.ANY,
         "log_level": logging.INFO,
-        "model_file_dir": "/tmp/audio-separator-models/",
+        "model_file_dir": "/tmp/PolUVR-models/",
         "output_dir": None,
         "output_format": "FLAC",
         "output_bitrate": None,
@@ -91,7 +91,7 @@ def test_cli_with_audio_file(capsys, common_expected_args):
             main()
 
     # Update expected args for this specific test
-    common_expected_args["model_file_dir"] = "/tmp/audio-separator-models/"
+    common_expected_args["model_file_dir"] = "/tmp/PolUVR-models/"
 
     # Check if the separate method was called with the correct arguments
     mock_separate.assert_called_once()

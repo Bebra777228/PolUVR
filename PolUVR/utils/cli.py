@@ -44,7 +44,7 @@ def main():
     io_params.add_argument("--output_format", default="FLAC", help=output_format_help)
     io_params.add_argument("--output_bitrate", default=None, help=output_bitrate_help)
     io_params.add_argument("--output_dir", default=None, help=output_dir_help)
-    io_params.add_argument("--model_file_dir", default="/tmp/audio-separator-models/", help=model_file_dir_help)
+    io_params.add_argument("--model_file_dir", default="/tmp/PolUVR-models/", help=model_file_dir_help)
     io_params.add_argument("--download_model_only", action="store_true", help=download_model_only_help)
 
     invert_spect_help = "Invert secondary stem using spectrogram (default: %(default)s). Example: --invert_spect"

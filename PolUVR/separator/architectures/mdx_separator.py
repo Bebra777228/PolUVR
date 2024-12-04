@@ -74,8 +74,8 @@ class MDXSeparator(CommonSeparator):
         self.logger.debug(f"MDX arch params: compensate={self.compensate}, dim_f={self.dim_f}, dim_t={self.dim_t}, n_fft={self.n_fft}")
         self.logger.debug(f"MDX arch params: config_yaml={self.config_yaml}")
 
-        # In UVR, these variables are set but either aren't useful or are better handled in audio-separator.
-        # Leaving these comments explaining to help myself or future developers understand why these aren't in audio-separator.
+        # In UVR, these variables are set but either aren't useful or are better handled in PolUVR.
+        # Leaving these comments explaining to help myself or future developers understand why these aren't in PolUVR.
 
         # "chunks" is not actually used for anything in UVR...
         # self.chunks = 0

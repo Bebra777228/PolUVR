@@ -2,48 +2,11 @@
 
 ---
 
-# Audio Separator 🎶
+# PolUVR 🎶
 
-[![PyPI version](https://badge.fury.io/py/audio-separator.svg)](https://badge.fury.io/py/audio-separator)
-[![Conda Version](https://img.shields.io/conda/vn/conda-forge/audio-separator.svg)](https://anaconda.org/conda-forge/audio-separator)
-[![Docker pulls](https://img.shields.io/docker/pulls/beveradb/audio-separator.svg)](https://hub.docker.com/r/beveradb/audio-separator/tags)
-[![codecov](https://codecov.io/gh/karaokenerds/python-audio-separator/graph/badge.svg?token=N7YK4ET5JP)](https://codecov.io/gh/karaokenerds/python-audio-separator)
-
-**Summary:** Easy to use audio stem separation from the command line or as a dependency in your own Python project, using the amazing MDX-Net, VR Arch, Demucs and MDXC models available in UVR by @Anjok07 & @aufr33.
-
-Audio Separator is a Python package that allows you to separate an audio file into various stems, using models trained by @Anjok07 for use with [Ultimate Vocal Remover](https://github.com/Anjok07/ultimatevocalremovergui).
-
-The simplest (and probably most used) use case for this package is to separate an audio file into two stems, Instrumental and Vocals, which can be very useful for producing karaoke videos! However, the models available in UVR can separate audio into many more stems, such as Drums, Bass, Piano, and Guitar, and perform other audio processing tasks, such as denoising or removing echo/reverb.
-
-## Features
-
-- Separate audio into multiple stems, e.g. instrumental and vocals.
-- Supports all common audio formats (WAV, MP3, FLAC, M4A, etc.)
-- Ability to inference using a pre-trained model in PTH or ONNX format.
-- CLI support for easy use in scripts and batch processing.
-- Python API for integration into other projects.
+[![PyPI version](https://badge.fury.io/py/PolUVR.svg)](https://badge.fury.io/py/PolUVR)
 
 ## Installation 🛠️
-
-### 🐳 Docker
-
-If you're able to use docker, you don't actually need to _install_ anything - there are [images published on Docker Hub](https://hub.docker.com/r/beveradb/audio-separator/tags) for GPU (CUDA) and CPU inferencing, for both `amd64` and `arm64` platforms.
-
-You probably want to volume-mount a folder containing whatever file you want to separate, which can then also be used as the output folder.
-
-For instance, if your current directory has the file `input.wav`, you could execute `PolUVR` as shown below (see [usage](#usage-) section for more details):
-
-```sh
-docker run -it -v `pwd`:/workdir beveradb/audio-separator input.wav
-```
-
-If you're using a machine with a GPU, you'll want to use the GPU specific image and pass in the GPU device to the container, like this:
-
-```sh
-docker run -it --gpus all -v `pwd`:/workdir beveradb/audio-separator:gpu input.wav
-```
-
-If the GPU isn't being detected, make sure your docker runtime environment is passing through the GPU correctly - there are [various guides](https://www.celantur.com/blog/run-cuda-in-docker-on-linux/) online to help with that.
 
 ### 🎮 Nvidia GPU with CUDA or 🧪 Google Colab
 
@@ -52,19 +15,9 @@ If the GPU isn't being detected, make sure your docker runtime environment is pa
 💬 If successfully configured, you should see this log message when running `PolUVR --env_info`:
  `ONNXruntime has CUDAExecutionProvider available, enabling acceleration`
 
-Conda:
-```sh
-conda install pytorch=*=*cuda* onnxruntime=*=*cuda* PolUVR -c pytorch -c conda-forge
-```
-
 Pip:
 ```sh
 pip install "PolUVR[gpu]"
-```
-
-Docker:
-```sh
-beveradb/audio-separator:gpu
 ```
 
 ###  Apple Silicon, macOS Sonoma+ with M1 or newer CPU (CoreML acceleration)
@@ -79,19 +32,9 @@ pip install "PolUVR[cpu]"
 
 ### 🐢 No hardware acceleration, CPU only
 
-Conda:
-```sh
-conda install PolUVR -c pytorch -c conda-forge
-```
-
 Pip:
 ```sh
 pip install "PolUVR[cpu]"
-```
-
-Docker:
-```sh
-beveradb/audio-separator
 ```
 
 ### 🎥 FFmpeg dependency
@@ -158,7 +101,7 @@ python -m pip install ort-nightly-gpu --index-url=https://aiinfra.pkgs.visualstu
 
 ### Command Line Interface (CLI)
 
-You can use Audio Separator via the command line, for example:
+You can use PolUVR via the command line, for example:
 
 ```sh
 PolUVR /path/to/your/input/audio.wav --model_filename UVR-MDX-NET-Inst_HQ_3.onnx
@@ -170,7 +113,7 @@ This command will download the specified model file, process the `audio.wav` inp
 
 To see a list of supported models, run `PolUVR --list_models`
 
-Any file listed in the list models output can be specified (with file extension) with the model_filename parameter (e.g. `--model_filename UVR_MDXNET_KARA_2.onnx`) and it will be automatically downloaded to the `--model_file_dir` (default: `/tmp/audio-separator-models/`) folder on first usage.
+Any file listed in the list models output can be specified (with file extension) with the model_filename parameter (e.g. `--model_filename UVR_MDXNET_KARA_2.onnx`) and it will be automatically downloaded to the `--model_file_dir` (default: `/tmp/PolUVR-models/`) folder on first usage.
 
 ### Full command-line interface options
 
@@ -202,7 +145,7 @@ Separation I/O Params:
   -m MODEL_FILENAME, --model_filename MODEL_FILENAME     Model to use for separation (default: UVR-MDX-NET-Inst_HQ_3.onnx). Example: -m 2_HP-UVR.pth
   --output_format OUTPUT_FORMAT                          Output format for separated files, any common format (default: FLAC). Example: --output_format=MP3
   --output_dir OUTPUT_DIR                                Directory to write output files (default: <current dir>). Example: --output_dir=/app/separated
-  --model_file_dir MODEL_FILE_DIR                        Model files directory (default: /tmp/audio-separator-models/). Example: --model_file_dir=/app/models
+  --model_file_dir MODEL_FILE_DIR                        Model files directory (default: /tmp/PolUVR-models/). Example: --model_file_dir=/app/models
 
 Common Separation Parameters:
   --invert_spect                                         Invert secondary stem using spectogram (default: False). Example: --invert_spect
@@ -244,7 +187,7 @@ MDXC Architecture Parameters:
 
 ### As a Dependency in a Python Project
 
-You can use Audio Separator in your own Python project. Here's a minimal example using the default two stem (Instrumental and Vocals) model:
+You can use PolUVR in your own Python project. Here's a minimal example using the default two stem (Instrumental and Vocals) model:
 
 ```python
 from PolUVR.separator import Separator
@@ -346,7 +289,7 @@ You can also rename specific stems:
 
 - **`log_level`:** (Optional) Logging level, e.g., INFO, DEBUG, WARNING. `Default: logging.INFO`
 - **`log_formatter`:** (Optional) The log format. Default: None, which falls back to '%(asctime)s - %(levelname)s - %(module)s - %(message)s'
-- **`model_file_dir`:** (Optional) Directory to cache model files in. `Default: /tmp/audio-separator-models/`
+- **`model_file_dir`:** (Optional) Directory to cache model files in. `Default: /tmp/PolUVR-models/`
 - **`output_dir`:** (Optional) Directory where the separated files will be saved. If not specified, uses the current directory.
 - **`output_format`:** (Optional) Format to encode output files, any common format (WAV, MP3, FLAC, M4A, etc.). `Default: WAV`
 - **`normalization_threshold`:** (Optional) The amount by which the amplitude of the output audio will be multiplied. `Default: 0.9`
@@ -382,7 +325,7 @@ Clone the repository to your local machine:
 
 ```sh
 git clone https://github.com/YOUR_USERNAME/PolUVR.git
-cd audio-separator
+cd PolUVR
 ```
 
 Replace `YOUR_USERNAME` with your GitHub username if you've forked the repository, or use the main repository URL if you have the permissions.
@@ -429,16 +372,6 @@ Once you are done with your development work, you can exit the virtual environme
 conda deactivate
 ```
 
-### Building the Package
-
-To build the package for distribution, use the following command:
-
-```sh
-poetry build
-```
-
-This will generate the distribution packages in the dist directory - but for now only @beveradb will be able to publish to PyPI.
-
 ## Contributing 🤝
 
 Contributions are very much welcome! Please fork the repository and submit a pull request with your changes, and I'll try to review, merge and publish promptly!
@@ -447,12 +380,6 @@ Contributions are very much welcome! Please fork the repository and submit a pul
 - If the maintenance workload for this repo somehow becomes too much for me I'll ask for volunteers to share maintainership of the repo, though I don't think that is very likely
 - Development and support for the MDX-Net separation models is part of the main [UVR project](https://github.com/Anjok07/ultimatevocalremovergui), this repo is just a CLI/Python package wrapper to simplify running those models programmatically. So, if you want to try and improve the actual models, please get involved in the UVR project and look for guidance there!
 
-## License 📄
-
-This project is licensed under the MIT [License](LICENSE).
-
-- **Please Note:** If you choose to integrate this project into some other project using the default model or any other model trained as part of the [UVR](https://github.com/Anjok07/ultimatevocalremovergui) project, please honor the MIT license by providing credit to UVR and its developers!
-
 ## Credits 🙏
 
 - [Anjok07](https://github.com/Anjok07) - Author of [Ultimate Vocal Remover GUI](https://github.com/Anjok07/ultimatevocalremovergui), which almost all of the code in this repo was copied from! Definitely deserving of credit for anything good from this project. Thank you!
@@ -460,12 +387,4 @@ This project is licensed under the MIT [License](LICENSE).
 - [Kuielab & Woosung Choi](https://github.com/kuielab) - Developed the original MDX-Net AI code.
 - [KimberleyJSN](https://github.com/KimberleyJensen) - Advised and aided the implementation of the training scripts for MDX-Net and Demucs. Thank you!
 - [Hv](https://github.com/NaJeongMo/Colab-for-MDX_B) - Helped implement chunks into the MDX-Net AI code. Thank you!
-- [zhzhongshi](https://github.com/zhzhongshi) - Helped add support for the MDXC models in `audio-separator`. Thank you!
-
-## Contact 💌
-
-For questions or feedback, please raise an issue or reach out to @beveradb ([Andrew Beveridge](mailto:andrew@beveridge.uk)) directly.
-
-## Sponsors
-
-<!-- sponsors --><!-- sponsors -->
+- [zhzhongshi](https://github.com/zhzhongshi) - Helped add support for the MDXC models in [`audio-separator`](https://github.com/nomadkaraoke/python-audio-separator). Thank you!

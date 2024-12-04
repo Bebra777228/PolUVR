@@ -6,7 +6,7 @@ import json
 import hashlib
 import requests
 
-MODEL_CACHE_PATH = "/tmp/audio-separator-models"
+MODEL_CACHE_PATH = "/tmp/PolUVR-models"
 VR_MODEL_DATA_LOCAL_PATH = f"{MODEL_CACHE_PATH}/vr_model_data.json"
 MDX_MODEL_DATA_LOCAL_PATH = f"{MODEL_CACHE_PATH}/mdx_model_data.json"
 
