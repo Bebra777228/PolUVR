@@ -34,19 +34,19 @@ def common_expected_args():
 # Test the CLI with version argument using subprocess
 def test_cli_version_subprocess():
     # Run the CLI script with the '--version' argument
-    result = subprocess.run(["poetry", "run", "audio-separator", "--version"], capture_output=True, text=True)
+    result = subprocess.run(["poetry", "run", "PolUVR", "--version"], capture_output=True, text=True)
     assert result.returncode == 0
-    assert "audio-separator" in result.stdout
+    assert "PolUVR" in result.stdout
 
     # Test with the short version flag '-v'
-    result = subprocess.run(["poetry", "run", "audio-separator", "-v"], capture_output=True, text=True)
+    result = subprocess.run(["poetry", "run", "PolUVR", "-v"], capture_output=True, text=True)
     assert result.returncode == 0
-    assert "audio-separator" in result.stdout
+    assert "PolUVR" in result.stdout
 
 
 # Test the CLI with no arguments
 def test_cli_no_args(capsys):
-    result = subprocess.run(["poetry", "run", "audio-separator"], capture_output=True, text=True)
+    result = subprocess.run(["poetry", "run", "PolUVR"], capture_output=True, text=True)
     assert result.returncode == 1
     assert "usage:" in result.stdout
 
