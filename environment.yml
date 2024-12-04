@@ -1,4 +1,4 @@
-name: audio-separator-dev
+name: PolUVR-dev
 channels:
   - conda-forge
 dependencies:

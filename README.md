@@ -31,7 +31,7 @@ If you're able to use docker, you don't actually need to _install_ anything - th
 
 You probably want to volume-mount a folder containing whatever file you want to separate, which can then also be used as the output folder.
 
-For instance, if your current directory has the file `input.wav`, you could execute `audio-separator` as shown below (see [usage](#usage-) section for more details):
+For instance, if your current directory has the file `input.wav`, you could execute `PolUVR` as shown below (see [usage](#usage-) section for more details):
 
 ```sh
 docker run -it -v `pwd`:/workdir beveradb/audio-separator input.wav
@@ -49,17 +49,17 @@ If the GPU isn't being detected, make sure your docker runtime environment is pa
 
 **Supported CUDA Versions:** 11.8 and 12.2
 
-💬 If successfully configured, you should see this log message when running `audio-separator --env_info`:
+💬 If successfully configured, you should see this log message when running `PolUVR --env_info`:
  `ONNXruntime has CUDAExecutionProvider available, enabling acceleration`
 
 Conda:
 ```sh
-conda install pytorch=*=*cuda* onnxruntime=*=*cuda* audio-separator -c pytorch -c conda-forge
+conda install pytorch=*=*cuda* onnxruntime=*=*cuda* PolUVR -c pytorch -c conda-forge
 ```
 
 Pip:
 ```sh
-pip install "audio-separator[gpu]"
+pip install "PolUVR[gpu]"
 ```
 
 Docker:
@@ -69,24 +69,24 @@ beveradb/audio-separator:gpu
 
 ###  Apple Silicon, macOS Sonoma+ with M1 or newer CPU (CoreML acceleration)
 
-💬 If successfully configured, you should see this log message when running `audio-separator --env_info`:
+💬 If successfully configured, you should see this log message when running `PolUVR --env_info`:
  `ONNXruntime has CoreMLExecutionProvider available, enabling acceleration`
 
 Pip:
 ```sh
-pip install "audio-separator[cpu]"
+pip install "PolUVR[cpu]"
 ```
 
 ### 🐢 No hardware acceleration, CPU only
 
 Conda:
 ```sh
-conda install audio-separator-c pytorch -c conda-forge
+conda install PolUVR -c pytorch -c conda-forge
 ```
 
 Pip:
 ```sh
-pip install "audio-separator[cpu]"
+pip install "PolUVR[cpu]"
 ```
 
 Docker:
@@ -96,9 +96,9 @@ beveradb/audio-separator
 
 ### 🎥 FFmpeg dependency
 
-💬 To test if `audio-separator` has been successfully configured to use FFmpeg, run `audio-separator --env_info`. The log will show `FFmpeg installed`.
+💬 To test if `PolUVR` has been successfully configured to use FFmpeg, run `PolUVR --env_info`. The log will show `FFmpeg installed`.
 
-If you installed `audio-separator` using `conda` or `docker`, FFmpeg should already be available in your environment.
+If you installed `PolUVR` using `conda` or `docker`, FFmpeg should already be available in your environment.
 
 You may need to separately install FFmpeg. It should be easy to install on most platforms, e.g.:
 
@@ -114,7 +114,7 @@ brew update; brew install ffmpeg
 
 ## GPU / CUDA specific installation steps with Pip
 
-In theory, all you should need to do to get `audio-separator` working with a GPU is install it with the `[gpu]` extra as above.
+In theory, all you should need to do to get `PolUVR` working with a GPU is install it with the `[gpu]` extra as above.
 
 However, sometimes getting both PyTorch and ONNX Runtime working with CUDA support can be a bit tricky so it may not work that easily.
 
@@ -134,7 +134,7 @@ Depending on your CUDA version and environment, you may need to install specific
 
 🧪 Google Colab, for example, now uses CUDA 12 by default, but ONNX Runtime still needs CUDA 11 libraries to work.
 
-If you see the error `Failed to load library` or `cannot open shared object file` when you run `audio-separator`, this is likely the issue.
+If you see the error `Failed to load library` or `cannot open shared object file` when you run `PolUVR`, this is likely the issue.
 
 You can install the CUDA 11 libraries _alongside_ CUDA 12 like so:
 ```sh
@@ -161,27 +161,27 @@ python -m pip install ort-nightly-gpu --index-url=https://aiinfra.pkgs.visualstu
 You can use Audio Separator via the command line, for example:
 
 ```sh
-audio-separator /path/to/your/input/audio.wav --model_filename UVR-MDX-NET-Inst_HQ_3.onnx
+PolUVR /path/to/your/input/audio.wav --model_filename UVR-MDX-NET-Inst_HQ_3.onnx
 ```
 
 This command will download the specified model file, process the `audio.wav` input audio and generate two new files in the current directory, one containing vocals and one containing instrumental.
 
-**Note:** You do not need to download any files yourself - audio-separator does that automatically for you!
+**Note:** You do not need to download any files yourself - PolUVR does that automatically for you!
 
-To see a list of supported models, run `audio-separator --list_models`
+To see a list of supported models, run `PolUVR --list_models`
 
 Any file listed in the list models output can be specified (with file extension) with the model_filename parameter (e.g. `--model_filename UVR_MDXNET_KARA_2.onnx`) and it will be automatically downloaded to the `--model_file_dir` (default: `/tmp/audio-separator-models/`) folder on first usage.
 
 ### Full command-line interface options
 
 ```sh
-usage: audio-separator [-h] [-v] [-d] [-e] [-l] [--log_level LOG_LEVEL] [-m MODEL_FILENAME] [--output_format OUTPUT_FORMAT] [--output_dir OUTPUT_DIR] [--model_file_dir MODEL_FILE_DIR] [--invert_spect]
-                       [--normalization NORMALIZATION] [--single_stem SINGLE_STEM] [--sample_rate SAMPLE_RATE] [--use_autocast] [--mdx_segment_size MDX_SEGMENT_SIZE] [--mdx_overlap MDX_OVERLAP] [--mdx_batch_size MDX_BATCH_SIZE]
-                       [--mdx_hop_length MDX_HOP_LENGTH] [--mdx_enable_denoise] [--vr_batch_size VR_BATCH_SIZE] [--vr_window_size VR_WINDOW_SIZE] [--vr_aggression VR_AGGRESSION] [--vr_enable_tta]
-                       [--vr_high_end_process] [--vr_enable_post_process] [--vr_post_process_threshold VR_POST_PROCESS_THRESHOLD] [--demucs_segment_size DEMUCS_SEGMENT_SIZE] [--demucs_shifts DEMUCS_SHIFTS]
-                       [--demucs_overlap DEMUCS_OVERLAP] [--demucs_segments_enabled DEMUCS_SEGMENTS_ENABLED] [--mdxc_segment_size MDXC_SEGMENT_SIZE] [--mdxc_override_model_segment_size]
-                       [--mdxc_overlap MDXC_OVERLAP] [--mdxc_batch_size MDXC_BATCH_SIZE] [--mdxc_pitch_shift MDXC_PITCH_SHIFT]
-                       [audio_file]
+usage: PolUVR [-h] [-v] [-d] [-e] [-l] [--log_level LOG_LEVEL] [-m MODEL_FILENAME] [--output_format OUTPUT_FORMAT] [--output_dir OUTPUT_DIR] [--model_file_dir MODEL_FILE_DIR]
+			  [--invert_spect] [--normalization NORMALIZATION] [--single_stem SINGLE_STEM] [--sample_rate SAMPLE_RATE] [--use_autocast] [--custom_output_names]
+			  [--mdx_segment_size MDX_SEGMENT_SIZE] [--mdx_overlap MDX_OVERLAP] [--mdx_batch_size MDX_BATCH_SIZE] [--mdx_hop_length MDX_HOP_LENGTH] [--mdx_enable_denoise]
+			  [--vr_batch_size VR_BATCH_SIZE] [--vr_window_size VR_WINDOW_SIZE] [--vr_aggression VR_AGGRESSION] [--vr_enable_tta] [--vr_high_end_process] [--vr_enable_post_process] [--vr_post_process_threshold VR_POST_PROCESS_THRESHOLD]
+			  [--demucs_segment_size DEMUCS_SEGMENT_SIZE] [--demucs_shifts DEMUCS_SHIFTS] [--demucs_overlap DEMUCS_OVERLAP] [--demucs_segments_enabled DEMUCS_SEGMENTS_ENABLED]
+			  [--mdxc_segment_size MDXC_SEGMENT_SIZE] [--mdxc_override_model_segment_size] [--mdxc_overlap MDXC_OVERLAP] [--mdxc_batch_size MDXC_BATCH_SIZE] [--mdxc_pitch_shift MDXC_PITCH_SHIFT]
+              [audio_file]
 
 Separate audio file into different stems.
 
@@ -247,7 +247,7 @@ MDXC Architecture Parameters:
 You can use Audio Separator in your own Python project. Here's a minimal example using the default two stem (Instrumental and Vocals) model:
 
 ```python
-from audio_separator.separator import Separator
+from PolUVR.separator import Separator
 
 # Initialize the Separator class (with optional configuration properties, below)
 separator = Separator()
@@ -268,7 +268,7 @@ You can process multiple files without reloading the model to save time and memo
 You only need to load a model when choosing or changing models. See example below:
 
 ```python
-from audio_separator.separator import Separator
+from PolUVR.separator import Separator
 
 # Initialize the Separator with other configuration properties, below
 separator = Separator()
@@ -381,7 +381,7 @@ This project uses Poetry for dependency management and packaging. Follow these s
 Clone the repository to your local machine:
 
 ```sh
-git clone https://github.com/YOUR_USERNAME/audio-separator.git
+git clone https://github.com/YOUR_USERNAME/PolUVR.git
 cd audio-separator
 ```
 
@@ -393,7 +393,7 @@ To create and activate the conda environment, use the following commands:
 
 ```sh
 conda env create
-conda activate audio-separator-dev
+conda activate PolUVR-dev
 ```
 
 ### Install Dependencies
@@ -418,7 +418,7 @@ poetry install --extras "gpu"
 You can run the CLI command directly within the virtual environment. For example:
 
 ```sh
-audio-separator path/to/your/audio-file.wav
+PolUVR path/to/your/audio-file.wav
 ```
 
 ### Deactivate the Virtual Environment

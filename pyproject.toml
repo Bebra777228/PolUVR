@@ -9,8 +9,8 @@ description = "Easy to use audio stem separation, using various models from UVR 
 authors = ["Politrees"]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "audio_separator"}]
-include = ["audio_separator/separator/models.json"]
+packages = [{include = "PolUVR"}]
+include = ["PolUVR/separator/models.json"]
 homepage = "https://github.com/Bebra777228/PolUVR"
 repository = "https://github.com/Bebra777228/PolUVR"
 documentation = "https://github.com/Bebra777228/PolUVR/blob/main/README.md"
@@ -57,8 +57,8 @@ cpu = ["onnxruntime"]
 gpu = ["onnxruntime-gpu"]
 
 [tool.poetry.scripts]
-PolUVR = 'audio_separator.utils.cli:main'
-PolUVR-app = 'audio_separator.app:main'
+PolUVR = 'PolUVR.utils.cli:main'
+PolUVR-app = 'PolUVR.app:main'
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
