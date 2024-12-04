@@ -155,7 +155,7 @@ def roformer_separator(audio, model_key, seg_size, override_seg_size, overlap, p
         separator.load_model(model_filename=model)
 
         progress(0.7, desc="Audio separated...")
-        separation = separator.separate(audio, f"{base_name}_(Stem1)", f"{base_name}_(Stem2)")
+        separation = separator.separate(audio) # , f"{base_name}_(Stem1)", f"{base_name}_(Stem2)")
         print(f"Separation complete!\nResults: {', '.join(separation)}")
 
         stems = [os.path.join(out_dir, file_name) for file_name in separation]
@@ -190,7 +190,7 @@ def mdx23c_separator(audio, model, seg_size, override_seg_size, overlap, pitch_s
         separator.load_model(model_filename=model)
 
         progress(0.7, desc="Audio separated...")
-        separation = separator.separate(audio, f"{base_name}_(Stem1)", f"{base_name}_(Stem2)")
+        separation = separator.separate(audio) # , f"{base_name}_(Stem1)", f"{base_name}_(Stem2)")
         print(f"Separation complete!\nResults: {', '.join(separation)}")
 
         stems = [os.path.join(out_dir, file_name) for file_name in separation]
@@ -225,7 +225,7 @@ def mdx_separator(audio, model, hop_length, seg_size, overlap, denoise, model_di
         separator.load_model(model_filename=model)
 
         progress(0.7, desc="Audio separated...")
-        separation = separator.separate(audio, f"{base_name}_(Stem1)", f"{base_name}_(Stem2)")
+        separation = separator.separate(audio) # , f"{base_name}_(Stem1)", f"{base_name}_(Stem2)")
         print(f"Separation complete!\nResults: {', '.join(separation)}")
 
         stems = [os.path.join(out_dir, file_name) for file_name in separation]
@@ -262,7 +262,7 @@ def vr_separator(audio, model, window_size, aggression, tta, post_process, post_
         separator.load_model(model_filename=model)
 
         progress(0.7, desc="Audio separated...")
-        separation = separator.separate(audio, f"{base_name}_(Stem1)", f"{base_name}_(Stem2)")
+        separation = separator.separate(audio) # , f"{base_name}_(Stem1)", f"{base_name}_(Stem2)")
         print(f"Separation complete!\nResults: {', '.join(separation)}")
 
         stems = [os.path.join(out_dir, file_name) for file_name in separation]
