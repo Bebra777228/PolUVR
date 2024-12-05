@@ -439,7 +439,7 @@ with gr.Blocks(
                   output_format = gr.Dropdown(value="wav", choices=["wav", "flac", "mp3"], label="Output Format", info="The format of the output audio file.")
               with gr.Row():
                   norm_threshold = gr.Slider(minimum=0.1, maximum=1, step=0.1, value=0.9, label="Normalization threshold", info="The threshold for audio normalization.")
-                  amp_threshold = gr.Slider(minimum=0.1, maximum=1, step=0.1, value=0.6, label="Amplification threshold", info="The threshold for audio amplification.")
+                  amp_threshold = gr.Slider(minimum=0.1, maximum=1, step=0.1, value=0.0, label="Amplification threshold", info="The threshold for audio amplification.")
               with gr.Row():
                   batch_size = gr.Slider(minimum=1, maximum=16, step=1, value=1, label="Batch Size", info="Larger consumes more RAM but may process slightly faster.")
 
