@@ -1,6 +1,6 @@
 # PolUVR 🎶
 
-[![PyPI version](https://badge.fury.io/py/PolUVR.svg)](https://badge.fury.io/py/PolUVR)
+[![PyPI version](https://badge.fury.io/py/PolUVR.svg?icon=si%3Apython)](https://badge.fury.io/py/PolUVR)
 
 ## Overview
 
