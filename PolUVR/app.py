@@ -9,15 +9,17 @@ from PolUVR.separator import Separator
 device = "cuda" if torch.cuda.is_available() else "cpu"
 use_autocast = device == "cuda"
 
-# Model lists
+#=========================#
+#     Roformer Models     #
+#=========================#
 ROFORMER_MODELS = {
-    'BS-Roformer-Viperx-1297.ckpt': 'model_bs_roformer_ep_317_sdr_12.9755.ckpt',
-    'BS-Roformer-Viperx-1296.ckpt': 'model_bs_roformer_ep_368_sdr_12.9628.ckpt',
-    'BS-Roformer-Viperx-1053.ckpt': 'model_bs_roformer_ep_937_sdr_10.5309.ckpt',
-    'BS-Roformer-De-Reverb.ckpt': 'deverb_bs_roformer_8_384dim_10depth.ckpt',
-    'Mel-Roformer-Viperx-1143.ckpt': 'model_mel_band_roformer_ep_3005_sdr_11.4360.ckpt',
-    'Mel-Roformer-Crowd-Aufr33-Viperx.ckpt': 'mel_band_roformer_crowd_aufr33_viperx_sdr_8.7144.ckpt',
-    'Mel-Roformer-Karaoke-Aufr33-Viperx.ckpt': 'mel_band_roformer_karaoke_aufr33_viperx_sdr_10.1956.ckpt',
+    'BS-Roformer-Viperx-1053': 'model_bs_roformer_ep_937_sdr_10.5309.ckpt',
+    'BS-Roformer-Viperx-1296': 'model_bs_roformer_ep_368_sdr_12.9628.ckpt',
+    'BS-Roformer-Viperx-1297': 'model_bs_roformer_ep_317_sdr_12.9755.ckpt',
+    'BS-Roformer-De-Reverb': 'deverb_bs_roformer_8_384dim_10depth.ckpt',
+    'Mel-Roformer-Viperx-1143': 'model_mel_band_roformer_ep_3005_sdr_11.4360.ckpt',
+    'Mel-Roformer-Crowd-Aufr33-Viperx': 'mel_band_roformer_crowd_aufr33_viperx_sdr_8.7144.ckpt',
+    'Mel-Roformer-Karaoke-Aufr33-Viperx': 'mel_band_roformer_karaoke_aufr33_viperx_sdr_10.1956.ckpt',
     'Mel-Roformer-Denoise-Aufr33': 'denoise_mel_band_roformer_aufr33_sdr_27.9959.ckpt',
     'Mel-Roformer-Denoise-Aufr33-Aggr': 'denoise_mel_band_roformer_aufr33_aggr_sdr_27.9768.ckpt',
     'MelBand Roformer Kim | Inst V1 by Unwa': 'melband_roformer_inst_v1.ckpt',
@@ -25,51 +27,60 @@ ROFORMER_MODELS = {
     'MelBand Roformer Kim | InstVoc Duality V1 by Unwa': 'melband_roformer_instvoc_duality_v1.ckpt',
     'MelBand Roformer Kim | InstVoc Duality V2 by Unwa': 'melband_roformer_instvox_duality_v2.ckpt',
 }
+#=========================#
+#      MDX23C Models      #
+#=========================#
 MDX23C_MODELS = [
-    'MDX23C_D1581.ckpt',
     'MDX23C-8KFFT-InstVoc_HQ.ckpt',
     'MDX23C-8KFFT-InstVoc_HQ_2.ckpt',
+    'MDX23C_D1581.ckpt',
 ]
+#=========================#
+#     MDXN-NET Models     #
+#=========================#
 MDXNET_MODELS = [
-    'UVR-MDX-NET-Inst_full_292.onnx',
-    'UVR-MDX-NET_Inst_187_beta.onnx',
+    'UVR-MDX-NET-Inst_1.onnx',
+    'UVR-MDX-NET-Inst_2.onnx',
+    'UVR-MDX-NET-Inst_3.onnx',
+    'UVR-MDX-NET-Inst_HQ_1.onnx',
+    'UVR-MDX-NET-Inst_HQ_2.onnx',
+    'UVR-MDX-NET-Inst_HQ_3.onnx',
+    'UVR-MDX-NET-Inst_HQ_4.onnx',
+    'UVR-MDX-NET-Inst_HQ_5.onnx',
     'UVR-MDX-NET_Inst_82_beta.onnx',
     'UVR-MDX-NET_Inst_90_beta.onnx',
+    'UVR-MDX-NET_Inst_187_beta.onnx',
+    'UVR-MDX-NET-Inst_full_292.onnx',
     'UVR-MDX-NET_Main_340.onnx',
     'UVR-MDX-NET_Main_390.onnx',
     'UVR-MDX-NET_Main_406.onnx',
     'UVR-MDX-NET_Main_427.onnx',
     'UVR-MDX-NET_Main_438.onnx',
-    'UVR-MDX-NET-Inst_HQ_1.onnx',
-    'UVR-MDX-NET-Inst_HQ_2.onnx',
-    'UVR-MDX-NET-Inst_HQ_3.onnx',
-    'UVR-MDX-NET-Inst_HQ_4.onnx',
-    'UVR_MDXNET_Main.onnx',
-    'UVR-MDX-NET-Inst_Main.onnx',
+    'UVR-MDX-NET-Crowd_HQ_1.onnx',
+    'UVR-MDX-NET-Voc_FT.onnx',
     'UVR_MDXNET_1_9703.onnx',
     'UVR_MDXNET_2_9682.onnx',
     'UVR_MDXNET_3_9662.onnx',
-    'UVR-MDX-NET-Inst_1.onnx',
-    'UVR-MDX-NET-Inst_2.onnx',
-    'UVR-MDX-NET-Inst_3.onnx',
+    'UVR_MDXNET_9482.onnx',
     'UVR_MDXNET_KARA.onnx',
     'UVR_MDXNET_KARA_2.onnx',
-    'UVR_MDXNET_9482.onnx',
-    'UVR-MDX-NET-Voc_FT.onnx',
-    'Kim_Vocal_1.onnx',
-    'Kim_Vocal_2.onnx',
-    'Kim_Inst.onnx',
-    'Reverb_HQ_By_FoxJoy.onnx',
-    'UVR-MDX-NET_Crowd_HQ_1.onnx',
-    'kuielab_a_vocals.onnx',
-    'kuielab_a_other.onnx',
+    'UVR_MDXNET_Main.onnx',
     'kuielab_a_bass.onnx',
     'kuielab_a_drums.onnx',
-    'kuielab_b_vocals.onnx',
-    'kuielab_b_other.onnx',
+    'kuielab_a_other.onnx',
+    'kuielab_a_vocals.onnx',
     'kuielab_b_bass.onnx',
     'kuielab_b_drums.onnx',
+    'kuielab_b_other.onnx',
+    'kuielab_b_vocals.onnx',
+    'Kim_Inst.onnx',
+    'Kim_Vocal_1.onnx',
+    'Kim_Vocal_2.onnx',
+    'Reverb_HQ_By_FoxJoy.onnx',
 ]
+#========================#
+#     VR-ARCH Models     #
+#========================#
 VR_ARCH_MODELS = [
     '1_HP-UVR.pth',
     '2_HP-UVR.pth',
@@ -88,22 +99,25 @@ VR_ARCH_MODELS = [
     '15_SP-UVR-MID-44100-1.pth',
     '16_SP-UVR-MID-44100-2.pth',
     '17_HP-Wind_Inst-UVR.pth',
-    'UVR-DeEcho-DeReverb.pth',
-    'UVR-De-Echo-Normal.pth',
-    'UVR-De-Echo-Aggressive.pth',
-    'UVR-DeNoise.pth',
-    'UVR-DeNoise-Lite.pth',
-    'UVR-BVE-4B_SN-44100-1.pth',
     'MGM_HIGHEND_v4.pth',
     'MGM_LOWEND_A_v4.pth',
     'MGM_LOWEND_B_v4.pth',
     'MGM_MAIN_v4.pth',
+    'UVR-BVE-4B_SN-44100-1.pth',
+    'UVR-DeEcho-DeReverb.pth',
+    'UVR-De-Echo-Aggressive.pth',
+    'UVR-De-Echo-Normal.pth',
+    'UVR-DeNoise-Lite.pth',
+    'UVR-DeNoise.pth',
 ]
+#=======================#
+#     DEMUCS Models     #
+#=======================#
 DEMUCS_MODELS = [
-    'htdemucs_ft.yaml',
-    'htdemucs_6s.yaml',
-    'htdemucs.yaml',
     'hdemucs_mmi.yaml',
+    'htdemucs.yaml',
+    'htdemucs_6s.yaml',
+    'htdemucs_ft.yaml',
 ]
 
 def print_message(input_file, model_name):
