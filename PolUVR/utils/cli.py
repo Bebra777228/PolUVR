@@ -1,21 +1,35 @@
 #!/usr/bin/env python
 import argparse
-import logging
 import json
+import logging
 import sys
 from importlib import metadata
+
 
 def main():
     """Main entry point for the CLI."""
     logger = logging.getLogger(__name__)
     log_handler = logging.StreamHandler()
-    log_formatter = logging.Formatter(fmt="%(asctime)s.%(msecs)03d - %(levelname)s - %(module)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+    log_formatter = logging.Formatter(
+        fmt="%(asctime)s.%(msecs)03d - %(levelname)s - %(module)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
     log_handler.setFormatter(log_formatter)
     logger.addHandler(log_handler)
 
-    parser = argparse.ArgumentParser(description="Separate audio file into different stems.", formatter_class=lambda prog: argparse.RawTextHelpFormatter(prog, max_help_position=60))
+    parser = argparse.ArgumentParser(
+        description="Separate audio file into different stems.",
+        formatter_class=lambda prog: argparse.RawTextHelpFormatter(
+            prog, max_help_position=60
+        ),
+    )
 
-    parser.add_argument("audio_files", nargs="*", help="The audio file paths to separate, in any common format.", default=argparse.SUPPRESS)
+    parser.add_argument(
+        "audio_files",
+        nargs="*",
+        help="The audio file paths to separate, in any common format.",
+        default=argparse.SUPPRESS,
+    )
 
     package_version = metadata.distribution("PolUVR").version
 
@@ -26,26 +40,49 @@ def main():
     log_level_help = "Log level, e.g. info, debug, warning (default: %(default)s)."
 
     info_params = parser.add_argument_group("Info and Debugging")
-    info_params.add_argument("-v", "--version", action="version", version=f"%(prog)s {package_version}", help=version_help)
+    info_params.add_argument(
+        "-v",
+        "--version",
+        action="version",
+        version=f"%(prog)s {package_version}",
+        help=version_help,
+    )
     info_params.add_argument("-d", "--debug", action="store_true", help=debug_help)
-    info_params.add_argument("-e", "--env_info", action="store_true", help=env_info_help)
-    info_params.add_argument("-l", "--list_models", action="store_true", help=list_models_help)
+    info_params.add_argument(
+        "-e", "--env_info", action="store_true", help=env_info_help
+    )
+    info_params.add_argument(
+        "-l", "--list_models", action="store_true", help=list_models_help
+    )
     info_params.add_argument("--log_level", default="info", help=log_level_help)
 
-    model_filename_help = "Model to use for separation (default: %(default)s). Example: -m 2_HP-UVR.pth"
+    model_filename_help = (
+        "Model to use for separation (default: %(default)s). Example: -m 2_HP-UVR.pth"
+    )
     output_format_help = "Output format for separated files, any common format (default: %(default)s). Example: --output_format=MP3"
     output_bitrate_help = "Output bitrate for separated files, any ffmpeg-compatible bitrate (default: %(default)s). Example: --output_bitrate=320k"
     output_dir_help = "Directory to write output files (default: <current dir>). Example: --output_dir=/app/separated"
     model_file_dir_help = "Model files directory (default: %(default)s). Example: --model_file_dir=/app/models"
-    download_model_only_help = "Download a single model file only, without performing separation."
+    download_model_only_help = (
+        "Download a single model file only, without performing separation."
+    )
 
     io_params = parser.add_argument_group("Separation I/O Params")
-    io_params.add_argument("-m", "--model_filename", default="model_bs_roformer_ep_317_sdr_12.9755.yaml", help=model_filename_help)
+    io_params.add_argument(
+        "-m",
+        "--model_filename",
+        default="model_bs_roformer_ep_317_sdr_12.9755.yaml",
+        help=model_filename_help,
+    )
     io_params.add_argument("--output_format", default="FLAC", help=output_format_help)
     io_params.add_argument("--output_bitrate", default=None, help=output_bitrate_help)
     io_params.add_argument("--output_dir", default=None, help=output_dir_help)
-    io_params.add_argument("--model_file_dir", default="/tmp/PolUVR-models/", help=model_file_dir_help)
-    io_params.add_argument("--download_model_only", action="store_true", help=download_model_only_help)
+    io_params.add_argument(
+        "--model_file_dir", default="/tmp/PolUVR-models/", help=model_file_dir_help
+    )
+    io_params.add_argument(
+        "--download_model_only", action="store_true", help=download_model_only_help
+    )
 
     invert_spect_help = "Invert secondary stem using spectrogram (default: %(default)s). Example: --invert_spect"
     normalization_help = "Max peak amplitude to normalize input and output audio to (default: %(default)s). Example: --normalization=0.7"
@@ -54,17 +91,34 @@ def main():
     sample_rate_help = "Modify the sample rate of the output audio (default: %(default)s). Example: --sample_rate=44100"
     use_soundfile_help = "Use soundfile to write audio output (default: %(default)s). Example: --use_soundfile"
     use_autocast_help = "Use PyTorch autocast for faster inference (default: %(default)s). Do not use for CPU inference. Example: --use_autocast"
-    custom_output_names_help = "Custom names for all output files in JSON format (default: %(default)s). Example: --custom_output_names='{\"Vocals\": \"vocals_output\", \"Drums\": \"drums_output\"}'"
+    custom_output_names_help = 'Custom names for all output files in JSON format (default: %(default)s). Example: --custom_output_names=\'{"Vocals": "vocals_output", "Drums": "drums_output"}\''
 
     common_params = parser.add_argument_group("Common Separation Parameters")
-    common_params.add_argument("--invert_spect", action="store_true", help=invert_spect_help)
-    common_params.add_argument("--normalization", type=float, default=0.9, help=normalization_help)
-    common_params.add_argument("--amplification", type=float, default=0.0, help=amplification_help)
+    common_params.add_argument(
+        "--invert_spect", action="store_true", help=invert_spect_help
+    )
+    common_params.add_argument(
+        "--normalization", type=float, default=0.9, help=normalization_help
+    )
+    common_params.add_argument(
+        "--amplification", type=float, default=0.0, help=amplification_help
+    )
     common_params.add_argument("--single_stem", default=None, help=single_stem_help)
-    common_params.add_argument("--sample_rate", type=int, default=44100, help=sample_rate_help)
-    common_params.add_argument("--use_soundfile", action="store_true", help=use_soundfile_help)
-    common_params.add_argument("--use_autocast", action="store_true", help=use_autocast_help)
-    common_params.add_argument("--custom_output_names", type=json.loads, default=None, help=custom_output_names_help)
+    common_params.add_argument(
+        "--sample_rate", type=int, default=44100, help=sample_rate_help
+    )
+    common_params.add_argument(
+        "--use_soundfile", action="store_true", help=use_soundfile_help
+    )
+    common_params.add_argument(
+        "--use_autocast", action="store_true", help=use_autocast_help
+    )
+    common_params.add_argument(
+        "--custom_output_names",
+        type=json.loads,
+        default=None,
+        help=custom_output_names_help,
+    )
 
     mdx_segment_size_help = "Larger consumes more resources, but may give better results (default: %(default)s). Example: --mdx_segment_size=256"
     mdx_overlap_help = "Amount of overlap between prediction windows, 0.001-0.999. Higher is better but slower (default: %(default)s). Example: --mdx_overlap=0.25"
@@ -73,11 +127,21 @@ def main():
     mdx_enable_denoise_help = "Enable denoising during separation (default: %(default)s). Example: --mdx_enable_denoise"
 
     mdx_params = parser.add_argument_group("MDX Architecture Parameters")
-    mdx_params.add_argument("--mdx_segment_size", type=int, default=256, help=mdx_segment_size_help)
-    mdx_params.add_argument("--mdx_overlap", type=float, default=0.25, help=mdx_overlap_help)
-    mdx_params.add_argument("--mdx_batch_size", type=int, default=1, help=mdx_batch_size_help)
-    mdx_params.add_argument("--mdx_hop_length", type=int, default=1024, help=mdx_hop_length_help)
-    mdx_params.add_argument("--mdx_enable_denoise", action="store_true", help=mdx_enable_denoise_help)
+    mdx_params.add_argument(
+        "--mdx_segment_size", type=int, default=256, help=mdx_segment_size_help
+    )
+    mdx_params.add_argument(
+        "--mdx_overlap", type=float, default=0.25, help=mdx_overlap_help
+    )
+    mdx_params.add_argument(
+        "--mdx_batch_size", type=int, default=1, help=mdx_batch_size_help
+    )
+    mdx_params.add_argument(
+        "--mdx_hop_length", type=int, default=1024, help=mdx_hop_length_help
+    )
+    mdx_params.add_argument(
+        "--mdx_enable_denoise", action="store_true", help=mdx_enable_denoise_help
+    )
 
     vr_batch_size_help = "Number of batches to process at a time. Higher = more RAM, slightly faster processing (default: %(default)s). Example: --vr_batch_size=16"
     vr_window_size_help = "Balance quality and speed. 1024 = fast but lower, 320 = slower but better quality. (default: %(default)s). Example: --vr_window_size=320"
@@ -88,13 +152,32 @@ def main():
     vr_post_process_threshold_help = "Threshold for post_process feature: 0.1-0.3 (default: %(default)s). Example: --vr_post_process_threshold=0.1"
 
     vr_params = parser.add_argument_group("VR Architecture Parameters")
-    vr_params.add_argument("--vr_batch_size", type=int, default=1, help=vr_batch_size_help)
-    vr_params.add_argument("--vr_window_size", type=int, default=512, help=vr_window_size_help)
-    vr_params.add_argument("--vr_aggression", type=int, default=5, help=vr_aggression_help)
-    vr_params.add_argument("--vr_enable_tta", action="store_true", help=vr_enable_tta_help)
-    vr_params.add_argument("--vr_high_end_process", action="store_true", help=vr_high_end_process_help)
-    vr_params.add_argument("--vr_enable_post_process", action="store_true", help=vr_enable_post_process_help)
-    vr_params.add_argument("--vr_post_process_threshold", type=float, default=0.2, help=vr_post_process_threshold_help)
+    vr_params.add_argument(
+        "--vr_batch_size", type=int, default=1, help=vr_batch_size_help
+    )
+    vr_params.add_argument(
+        "--vr_window_size", type=int, default=512, help=vr_window_size_help
+    )
+    vr_params.add_argument(
+        "--vr_aggression", type=int, default=5, help=vr_aggression_help
+    )
+    vr_params.add_argument(
+        "--vr_enable_tta", action="store_true", help=vr_enable_tta_help
+    )
+    vr_params.add_argument(
+        "--vr_high_end_process", action="store_true", help=vr_high_end_process_help
+    )
+    vr_params.add_argument(
+        "--vr_enable_post_process",
+        action="store_true",
+        help=vr_enable_post_process_help,
+    )
+    vr_params.add_argument(
+        "--vr_post_process_threshold",
+        type=float,
+        default=0.2,
+        help=vr_post_process_threshold_help,
+    )
 
     demucs_segment_size_help = "Size of segments into which the audio is split, 1-100. Higher = slower but better quality (default: %(default)s). Example: --demucs_segment_size=256"
     demucs_shifts_help = "Number of predictions with random shifts, higher = slower but better quality (default: %(default)s). Example: --demucs_shifts=4"
@@ -102,10 +185,24 @@ def main():
     demucs_segments_enabled_help = "Enable segment-wise processing (default: %(default)s). Example: --demucs_segments_enabled=False"
 
     demucs_params = parser.add_argument_group("Demucs Architecture Parameters")
-    demucs_params.add_argument("--demucs_segment_size", type=str, default="Default", help=demucs_segment_size_help)
-    demucs_params.add_argument("--demucs_shifts", type=int, default=2, help=demucs_shifts_help)
-    demucs_params.add_argument("--demucs_overlap", type=float, default=0.25, help=demucs_overlap_help)
-    demucs_params.add_argument("--demucs_segments_enabled", type=bool, default=True, help=demucs_segments_enabled_help)
+    demucs_params.add_argument(
+        "--demucs_segment_size",
+        type=str,
+        default="Default",
+        help=demucs_segment_size_help,
+    )
+    demucs_params.add_argument(
+        "--demucs_shifts", type=int, default=2, help=demucs_shifts_help
+    )
+    demucs_params.add_argument(
+        "--demucs_overlap", type=float, default=0.25, help=demucs_overlap_help
+    )
+    demucs_params.add_argument(
+        "--demucs_segments_enabled",
+        type=bool,
+        default=True,
+        help=demucs_segments_enabled_help,
+    )
 
     mdxc_segment_size_help = "Larger consumes more resources, but may give better results (default: %(default)s). Example: --mdxc_segment_size=256"
     mdxc_override_model_segment_size_help = "Override model default segment size instead of using the model default value. Example: --mdxc_override_model_segment_size"
@@ -114,11 +211,23 @@ def main():
     mdxc_pitch_shift_help = "Shift audio pitch by a number of semitones while processing. May improve output for deep/high vocals. (default: %(default)s). Example: --mdxc_pitch_shift=2"
 
     mdxc_params = parser.add_argument_group("MDXC Architecture Parameters")
-    mdxc_params.add_argument("--mdxc_segment_size", type=int, default=256, help=mdxc_segment_size_help)
-    mdxc_params.add_argument("--mdxc_override_model_segment_size", action="store_true", help=mdxc_override_model_segment_size_help)
-    mdxc_params.add_argument("--mdxc_overlap", type=int, default=8, help=mdxc_overlap_help)
-    mdxc_params.add_argument("--mdxc_batch_size", type=int, default=1, help=mdxc_batch_size_help)
-    mdxc_params.add_argument("--mdxc_pitch_shift", type=int, default=0, help=mdxc_pitch_shift_help)
+    mdxc_params.add_argument(
+        "--mdxc_segment_size", type=int, default=256, help=mdxc_segment_size_help
+    )
+    mdxc_params.add_argument(
+        "--mdxc_override_model_segment_size",
+        action="store_true",
+        help=mdxc_override_model_segment_size_help,
+    )
+    mdxc_params.add_argument(
+        "--mdxc_overlap", type=int, default=8, help=mdxc_overlap_help
+    )
+    mdxc_params.add_argument(
+        "--mdxc_batch_size", type=int, default=1, help=mdxc_batch_size_help
+    )
+    mdxc_params.add_argument(
+        "--mdxc_pitch_shift", type=int, default=0, help=mdxc_pitch_shift_help
+    )
 
     args = parser.parse_args()
 
@@ -136,12 +245,20 @@ def main():
 
     if args.list_models:
         separator = Separator()
-        print(json.dumps(separator.list_supported_model_files(), indent=4, sort_keys=True))
+        print(
+            json.dumps(separator.list_supported_model_files(), indent=4, sort_keys=True)
+        )
         sys.exit(0)
 
     if args.download_model_only:
-        logger.info(f"Separator version {package_version} downloading model {args.model_filename} to directory {args.model_file_dir}")
-        separator = Separator(log_formatter=log_formatter, log_level=log_level, model_file_dir=args.model_file_dir)
+        logger.info(
+            f"Separator version {package_version} downloading model {args.model_filename} to directory {args.model_file_dir}"
+        )
+        separator = Separator(
+            log_formatter=log_formatter,
+            log_level=log_level,
+            model_file_dir=args.model_file_dir,
+        )
         separator.download_model_and_data(args.model_filename)
         logger.info(f"Model {args.model_filename} downloaded successfully.")
         sys.exit(0)
@@ -150,7 +267,9 @@ def main():
         parser.print_help()
         sys.exit(1)
 
-    logger.info(f"Separator version {package_version} beginning with input file(s): {', '.join(args.audio_files)}")
+    logger.info(
+        f"Separator version {package_version} beginning with input file(s): {', '.join(args.audio_files)}"
+    )
 
     separator = Separator(
         log_formatter=log_formatter,
@@ -200,5 +319,7 @@ def main():
     separator.load_model(model_filename=args.model_filename)
 
     for audio_file in args.audio_files:
-        output_files = separator.separate(audio_file, custom_output_names=args.custom_output_names)
+        output_files = separator.separate(
+            audio_file, custom_output_names=args.custom_output_names
+        )
         logger.info(f"Separation complete! Output file(s): {' '.join(output_files)}")

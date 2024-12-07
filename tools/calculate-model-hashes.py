@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
+import hashlib
+import json
 import os
 import sys
-import json
-import hashlib
+
 import requests
 
 MODEL_CACHE_PATH = "/tmp/PolUVR-models"
@@ -24,7 +25,9 @@ def get_model_hash(model_path):
     # print(f"Getting hash for model at {model_path}")
     try:
         with open(model_path, "rb") as f:
-            f.seek(-10000 * 1024, 2)  # Move the file pointer 10MB before the end of the file
+            f.seek(
+                -10000 * 1024, 2
+            )  # Move the file pointer 10MB before the end of the file
             hash_result = hashlib.md5(f.read()).hexdigest()
             # print(f"Hash for {model_path}: {hash_result}")
             return hash_result
@@ -72,7 +75,12 @@ def iterate_and_hash(directory):
     Iterate through a directory and hash all model files
     """
     print(f"Iterating through directory {directory} to hash model files")
-    model_files = [(file, os.path.join(root, file)) for root, _, files in os.walk(directory) for file in files if file.endswith((".pth", ".onnx"))]
+    model_files = [
+        (file, os.path.join(root, file))
+        for root, _, files in os.walk(directory)
+        for file in files
+        if file.endswith((".pth", ".onnx"))
+    ]
 
     download_file_if_missing(VR_MODEL_DATA_URL, VR_MODEL_DATA_LOCAL_PATH)
     download_file_if_missing(MDX_MODEL_DATA_URL, MDX_MODEL_DATA_LOCAL_PATH)

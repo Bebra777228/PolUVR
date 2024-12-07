@@ -6,24 +6,25 @@
 """
 Utilities to save and load models.
 """
-from contextlib import contextmanager
-
 import functools
 import hashlib
 import inspect
 import io
-from pathlib import Path
 import warnings
+from contextlib import contextmanager
+from pathlib import Path
 
-from diffq import DiffQuantizer, UniformQuantizer, restore_quantized_state
 import torch
+from diffq import DiffQuantizer, UniformQuantizer, restore_quantized_state
 
 
 def get_quantizer(model, args, optimizer=None):
     """Return the quantizer given the XP quantization args."""
     quantizer = None
     if args.diffq:
-        quantizer = DiffQuantizer(model, min_size=args.min_size, group_size=args.group_size)
+        quantizer = DiffQuantizer(
+            model, min_size=args.min_size, group_size=args.group_size
+        )
         if optimizer is not None:
             quantizer.setup_optimizer(optimizer)
     elif args.qat:
@@ -70,7 +71,10 @@ def get_state(model, quantizer, half=False):
     but half the state size."""
     if quantizer is None:
         dtype = torch.half if half else None
-        state = {k: p.data.to(device="cpu", dtype=dtype) for k, p in model.state_dict().items()}
+        state = {
+            k: p.data.to(device="cpu", dtype=dtype)
+            for k, p in model.state_dict().items()
+        }
     else:
         state = quantizer.get_quantized_state()
         state["__quantized"] = True

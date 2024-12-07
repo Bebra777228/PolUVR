@@ -1,7 +1,9 @@
 import unittest
+from unittest.mock import Mock
+
 import numpy as np
 import torch
-from unittest.mock import Mock, patch
+
 from PolUVR.separator.uvr_lib_v5.stft import STFT
 
 # Short-Time Fourier Transform (STFT) Process Overview:
@@ -25,7 +27,13 @@ class TestSTFT(unittest.TestCase):
         self.hop_length = 512
         self.dim_f = 1025
         self.device = torch.device("cpu")
-        self.stft = STFT(logger=Mock(), n_fft=self.n_fft, hop_length=self.hop_length, dim_f=self.dim_f, device=self.device)
+        self.stft = STFT(
+            logger=Mock(),
+            n_fft=self.n_fft,
+            hop_length=self.hop_length,
+            dim_f=self.dim_f,
+            device=self.device,
+        )
 
     def create_mock_tensor(self, shape, device=None):
         tensor = torch.rand(shape)
@@ -76,8 +84,12 @@ class TestSTFT(unittest.TestCase):
 
     def test_calculate_inverse_dimensions(self):
         # Create a sample input tensor
-        sample_input = torch.randn(1, 2, 500, 32)  # Batch, Channel, Frequency, Time dimensions
-        batch_dims, channel_dim, freq_dim, time_dim, num_freq_bins = self.stft.calculate_inverse_dimensions(sample_input)
+        sample_input = torch.randn(
+            1, 2, 500, 32
+        )  # Batch, Channel, Frequency, Time dimensions
+        batch_dims, channel_dim, freq_dim, time_dim, num_freq_bins = (
+            self.stft.calculate_inverse_dimensions(sample_input)
+        )
 
         # Expected values
         expected_num_freq_bins = self.n_fft // 2 + 1
@@ -91,11 +103,17 @@ class TestSTFT(unittest.TestCase):
 
     def test_pad_frequency_dimension(self):
         # Create a sample input tensor
-        sample_input = torch.randn(1, 2, 500, 32)  # Batch, Channel, Frequency, Time dimensions
-        batch_dims, channel_dim, freq_dim, time_dim, num_freq_bins = self.stft.calculate_inverse_dimensions(sample_input)
+        sample_input = torch.randn(
+            1, 2, 500, 32
+        )  # Batch, Channel, Frequency, Time dimensions
+        batch_dims, channel_dim, freq_dim, time_dim, num_freq_bins = (
+            self.stft.calculate_inverse_dimensions(sample_input)
+        )
 
         # Apply padding
-        padded_output = self.stft.pad_frequency_dimension(sample_input, batch_dims, channel_dim, freq_dim, time_dim, num_freq_bins)
+        padded_output = self.stft.pad_frequency_dimension(
+            sample_input, batch_dims, channel_dim, freq_dim, time_dim, num_freq_bins
+        )
 
         # Expected frequency dimension after padding
         expected_freq_dim = num_freq_bins
@@ -105,12 +123,20 @@ class TestSTFT(unittest.TestCase):
 
     def test_prepare_for_istft(self):
         # Create a sample input tensor
-        sample_input = torch.randn(1, 2, 500, 32)  # Batch, Channel, Frequency, Time dimensions
-        batch_dims, channel_dim, freq_dim, time_dim, num_freq_bins = self.stft.calculate_inverse_dimensions(sample_input)
-        padded_output = self.stft.pad_frequency_dimension(sample_input, batch_dims, channel_dim, freq_dim, time_dim, num_freq_bins)
+        sample_input = torch.randn(
+            1, 2, 500, 32
+        )  # Batch, Channel, Frequency, Time dimensions
+        batch_dims, channel_dim, freq_dim, time_dim, num_freq_bins = (
+            self.stft.calculate_inverse_dimensions(sample_input)
+        )
+        padded_output = self.stft.pad_frequency_dimension(
+            sample_input, batch_dims, channel_dim, freq_dim, time_dim, num_freq_bins
+        )
 
         # Apply prepare_for_istft
-        complex_tensor = self.stft.prepare_for_istft(padded_output, batch_dims, channel_dim, num_freq_bins, time_dim)
+        complex_tensor = self.stft.prepare_for_istft(
+            padded_output, batch_dims, channel_dim, num_freq_bins, time_dim
+        )
 
         # Calculate the expected flattened batch size (flattening batch and channel dimensions)
         expected_flattened_batch_size = batch_dims[0] * (channel_dim // 2)
@@ -126,7 +152,9 @@ class TestSTFT(unittest.TestCase):
         input_tensor = torch.rand(1, 2, 1025, 32)  # shape matching output of STFT
 
         # Initialize STFT
-        stft = STFT(logger=MockLogger(), n_fft=2048, hop_length=512, dim_f=1025, device="cpu")
+        stft = STFT(
+            logger=MockLogger(), n_fft=2048, hop_length=512, dim_f=1025, device="cpu"
+        )
 
         # Apply inverse STFT
         output_tensor = stft.inverse(input_tensor)
@@ -139,7 +167,9 @@ class TestSTFT(unittest.TestCase):
         input_tensor = torch.rand(1, 2, 1025, 32)  # shape matching output of STFT
 
         # Initialize STFT
-        stft = STFT(logger=MockLogger(), n_fft=2048, hop_length=512, dim_f=1025, device="cpu")
+        stft = STFT(
+            logger=MockLogger(), n_fft=2048, hop_length=512, dim_f=1025, device="cpu"
+        )
 
         # Apply inverse STFT
         output_tensor = stft.inverse(input_tensor)

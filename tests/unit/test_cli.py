@@ -1,10 +1,12 @@
 import json
-import pytest
 import logging
-from PolUVR.utils.cli import main
 import subprocess
 from unittest import mock
-from unittest.mock import patch, MagicMock, mock_open
+from unittest.mock import MagicMock, mock_open, patch
+
+import pytest
+
+from PolUVR.utils.cli import main
 
 
 # Common fixture for expected arguments
@@ -24,22 +26,51 @@ def common_expected_args():
         "sample_rate": 44100,
         "use_autocast": False,
         "use_soundfile": False,
-        "mdx_params": {"hop_length": 1024, "segment_size": 256, "overlap": 0.25, "batch_size": 1, "enable_denoise": False},
-        "vr_params": {"batch_size": 1, "window_size": 512, "aggression": 5, "enable_tta": False, "enable_post_process": False, "post_process_threshold": 0.2, "high_end_process": False},
-        "demucs_params": {"segment_size": "Default", "shifts": 2, "overlap": 0.25, "segments_enabled": True},
-        "mdxc_params": {"segment_size": 256, "batch_size": 1, "overlap": 8, "override_model_segment_size": False, "pitch_shift": 0},
+        "mdx_params": {
+            "hop_length": 1024,
+            "segment_size": 256,
+            "overlap": 0.25,
+            "batch_size": 1,
+            "enable_denoise": False,
+        },
+        "vr_params": {
+            "batch_size": 1,
+            "window_size": 512,
+            "aggression": 5,
+            "enable_tta": False,
+            "enable_post_process": False,
+            "post_process_threshold": 0.2,
+            "high_end_process": False,
+        },
+        "demucs_params": {
+            "segment_size": "Default",
+            "shifts": 2,
+            "overlap": 0.25,
+            "segments_enabled": True,
+        },
+        "mdxc_params": {
+            "segment_size": 256,
+            "batch_size": 1,
+            "overlap": 8,
+            "override_model_segment_size": False,
+            "pitch_shift": 0,
+        },
     }
 
 
 # Test the CLI with version argument using subprocess
 def test_cli_version_subprocess():
     # Run the CLI script with the '--version' argument
-    result = subprocess.run(["poetry", "run", "PolUVR", "--version"], capture_output=True, text=True)
+    result = subprocess.run(
+        ["poetry", "run", "PolUVR", "--version"], capture_output=True, text=True
+    )
     assert result.returncode == 0
     assert "PolUVR" in result.stdout
 
     # Test with the short version flag '-v'
-    result = subprocess.run(["poetry", "run", "PolUVR", "-v"], capture_output=True, text=True)
+    result = subprocess.run(
+        ["poetry", "run", "PolUVR", "-v"], capture_output=True, text=True
+    )
     assert result.returncode == 0
     assert "PolUVR" in result.stdout
 
@@ -62,9 +93,11 @@ def test_cli_multiple_filenames():
     mock_logger = MagicMock()
 
     # Patch multiple functions to prevent actual file operations and separations
-    with patch("sys.argv", test_args), patch("builtins.open", mock_file), patch("PolUVR.separator.Separator.separate") as mock_separate, patch(
-        "PolUVR.separator.Separator.load_model"
-    ), patch("logging.getLogger", return_value=mock_logger):
+    with patch("sys.argv", test_args), patch("builtins.open", mock_file), patch(
+        "PolUVR.separator.Separator.separate"
+    ) as mock_separate, patch("PolUVR.separator.Separator.load_model"), patch(
+        "logging.getLogger", return_value=mock_logger
+    ):
 
         # Mock the separate method to return some dummy output
         mock_separate.return_value = ["output_file1.mp3", "output_file2.mp3"]
@@ -83,7 +116,11 @@ def test_cli_multiple_filenames():
 
 # Test the CLI with a specific audio file
 def test_cli_with_audio_file(capsys, common_expected_args):
-    test_args = ["cli.py", "test_audio.mp3", "--model_filename=UVR-MDX-NET-Inst_HQ_4.onnx"]
+    test_args = [
+        "cli.py",
+        "test_audio.mp3",
+        "--model_filename=UVR-MDX-NET-Inst_HQ_4.onnx",
+    ]
     with patch("PolUVR.separator.Separator.separate") as mock_separate:
         mock_separate.return_value = ["output_file.mp3"]
         with patch("sys.argv", test_args):
@@ -121,7 +158,9 @@ def test_cli_model_filename_argument(common_expected_args):
 
             # Assertions
             mock_separator.assert_called_once_with(**common_expected_args)
-            mock_separator_instance.load_model.assert_called_once_with(model_filename="Custom_Model.onnx")
+            mock_separator_instance.load_model.assert_called_once_with(
+                model_filename="Custom_Model.onnx"
+            )
 
 
 # Test using output directory argument
@@ -262,7 +301,11 @@ def test_cli_use_autocast_argument(common_expected_args):
 # Test using custom_output_names argument
 def test_cli_Vocals_output_name_argument(common_expected_args):
     custom_vocals_names = {"Vocals": "vocals_output"}
-    test_args = ["cli.py", "test_audio.mp3", f"--custom_output_names={json.dumps(custom_vocals_names)}"]
+    test_args = [
+        "cli.py",
+        "test_audio.mp3",
+        f"--custom_output_names={json.dumps(custom_vocals_names)}",
+    ]
     with patch("sys.argv", test_args):
         with patch("PolUVR.separator.Separator") as mock_separator:
             mock_separator_instance = mock_separator.return_value
@@ -271,13 +314,19 @@ def test_cli_Vocals_output_name_argument(common_expected_args):
 
             # Assertions
             mock_separator.assert_called_once_with(**common_expected_args)
-            mock_separator_instance.separate.assert_called_once_with("test_audio.mp3", custom_output_names=custom_vocals_names)
+            mock_separator_instance.separate.assert_called_once_with(
+                "test_audio.mp3", custom_output_names=custom_vocals_names
+            )
 
 
 # Test using custom_output_names argument
 def test_cli_Instrumental_output_name_argument(common_expected_args):
     custom_instrumental_names = {"Instrumental": "instrumental_output"}
-    test_args = ["cli.py", "test_audio.mp3", f"--custom_output_names={json.dumps(custom_instrumental_names)}"]
+    test_args = [
+        "cli.py",
+        "test_audio.mp3",
+        f"--custom_output_names={json.dumps(custom_instrumental_names)}",
+    ]
     with patch("sys.argv", test_args):
         with patch("PolUVR.separator.Separator") as mock_separator:
             mock_separator_instance = mock_separator.return_value
@@ -286,7 +335,9 @@ def test_cli_Instrumental_output_name_argument(common_expected_args):
 
             # Assertions
             mock_separator.assert_called_once_with(**common_expected_args)
-            mock_separator_instance.separate.assert_called_once_with("test_audio.mp3", custom_output_names=custom_instrumental_names)
+            mock_separator_instance.separate.assert_called_once_with(
+                "test_audio.mp3", custom_output_names=custom_instrumental_names
+            )
 
 
 # Test using custom_output_names arguments
@@ -295,7 +346,11 @@ def test_cli_custom_output_names_argument(common_expected_args):
         "Vocals": "vocals_output",
         "Instrumental": "instrumental_output",
     }
-    test_args = ["cli.py", "test_audio.mp3", f"--custom_output_names={json.dumps(custom_names)}"]
+    test_args = [
+        "cli.py",
+        "test_audio.mp3",
+        f"--custom_output_names={json.dumps(custom_names)}",
+    ]
     with patch("sys.argv", test_args):
         with patch("PolUVR.separator.Separator") as mock_separator:
             mock_separator_instance = mock_separator.return_value
@@ -304,7 +359,9 @@ def test_cli_custom_output_names_argument(common_expected_args):
 
             # Assertions
             mock_separator.assert_called_once_with(**common_expected_args)
-            mock_separator_instance.separate.assert_called_once_with("test_audio.mp3", custom_output_names=custom_names)
+            mock_separator_instance.separate.assert_called_once_with(
+                "test_audio.mp3", custom_output_names=custom_names
+            )
 
 
 # Test using custom_output_names arguments
@@ -315,9 +372,14 @@ def test_cli_demucs_output_names_argument(common_expected_args):
         "Bass": "bass_output",
         "Other": "other_output",
         "Guitar": "guitar_output",
-        "Piano": "piano_output"
+        "Piano": "piano_output",
     }
-    test_args = ["cli.py", "test_audio.mp3", f"--custom_output_names={json.dumps(demucs_output_names)}", "--model_filename=htdemucs_6s.yaml"]
+    test_args = [
+        "cli.py",
+        "test_audio.mp3",
+        f"--custom_output_names={json.dumps(demucs_output_names)}",
+        "--model_filename=htdemucs_6s.yaml",
+    ]
     with patch("sys.argv", test_args):
         with patch("PolUVR.separator.Separator") as mock_separator:
             mock_separator_instance = mock_separator.return_value
@@ -326,4 +388,6 @@ def test_cli_demucs_output_names_argument(common_expected_args):
 
             # Assertions
             mock_separator.assert_called_once_with(**common_expected_args)
-            mock_separator_instance.separate.assert_called_once_with("test_audio.mp3", custom_output_names=demucs_output_names)
+            mock_separator_instance.separate.assert_called_once_with(
+                "test_audio.mp3", custom_output_names=demucs_output_names
+            )
