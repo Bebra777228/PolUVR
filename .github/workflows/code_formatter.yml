@@ -36,7 +36,7 @@ jobs:
         run: isort .
 
       - name: Run Black
-        run: black --line-length 140 .
+        run: black .
 
       - name: Check for changes
         id: changes
