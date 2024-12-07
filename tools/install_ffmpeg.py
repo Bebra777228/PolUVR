@@ -20,16 +20,18 @@ def install_ffmpeg():
         urls = [
             "https://huggingface.co/Politrees/RVC_resources/resolve/main/tools/ffmpeg/ffmpeg.exe?download=true",
             "https://huggingface.co/Politrees/RVC_resources/resolve/main/tools/ffmpeg/ffplay.exe?download=true",
-            "https://huggingface.co/Politrees/RVC_resources/resolve/main/tools/ffmpeg/ffprobe.exe?download=true"
+            "https://huggingface.co/Politrees/RVC_resources/resolve/main/tools/ffmpeg/ffprobe.exe?download=true",
         ]
         for url in urls:
-            filename = os.path.basename(url.split('?')[0])
+            filename = os.path.basename(url.split("?")[0])
             urllib.request.urlretrieve(url, filename)
     else:
         print(f"Unsupported OS: {system}")
 
+
 def main():
     install_ffmpeg()
+
 
 if __name__ == "__main__":
     main()
