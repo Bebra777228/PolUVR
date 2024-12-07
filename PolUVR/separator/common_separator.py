@@ -1,13 +1,15 @@
 """ This file contains the CommonSeparator class, common to all architecture-specific Separator classes. """
 
-from logging import Logger
-import os
 import gc
-import numpy as np
+import os
+from logging import Logger
+
 import librosa
+import numpy as np
+import soundfile as sf
 import torch
 from pydub import AudioSegment
-import soundfile as sf
+
 from PolUVR.separator.uvr_lib_v5 import spec_utils
 
 
@@ -49,9 +51,27 @@ class CommonSeparator:
     BV_VOCAL_STEM_LABEL = "Backing Vocals"
     NO_STEM = "No "
 
-    STEM_PAIR_MAPPER = {VOCAL_STEM: INST_STEM, INST_STEM: VOCAL_STEM, LEAD_VOCAL_STEM: BV_VOCAL_STEM, BV_VOCAL_STEM: LEAD_VOCAL_STEM, PRIMARY_STEM: SECONDARY_STEM}
+    STEM_PAIR_MAPPER = {
+        VOCAL_STEM: INST_STEM,
+        INST_STEM: VOCAL_STEM,
+        LEAD_VOCAL_STEM: BV_VOCAL_STEM,
+        BV_VOCAL_STEM: LEAD_VOCAL_STEM,
+        PRIMARY_STEM: SECONDARY_STEM,
+    }
 
-    NON_ACCOM_STEMS = (VOCAL_STEM, OTHER_STEM, BASS_STEM, DRUM_STEM, GUITAR_STEM, PIANO_STEM, SYNTH_STEM, STRINGS_STEM, WOODWINDS_STEM, BRASS_STEM, WIND_INST_STEM)
+    NON_ACCOM_STEMS = (
+        VOCAL_STEM,
+        OTHER_STEM,
+        BASS_STEM,
+        DRUM_STEM,
+        GUITAR_STEM,
+        PIANO_STEM,
+        SYNTH_STEM,
+        STRINGS_STEM,
+        WOODWINDS_STEM,
+        BRASS_STEM,
+        WIND_INST_STEM,
+    )
 
     def __init__(self, config):
 
@@ -89,11 +109,18 @@ class CommonSeparator:
         self.primary_stem_name = None
         self.secondary_stem_name = None
 
-        if "training" in self.model_data and "instruments" in self.model_data["training"]:
+        if (
+            "training" in self.model_data
+            and "instruments" in self.model_data["training"]
+        ):
             instruments = self.model_data["training"]["instruments"]
             if instruments:
                 self.primary_stem_name = instruments[0]
-                self.secondary_stem_name = instruments[1] if len(instruments) > 1 else self.secondary_stem(self.primary_stem_name)
+                self.secondary_stem_name = (
+                    instruments[1]
+                    if len(instruments) > 1
+                    else self.secondary_stem(self.primary_stem_name)
+                )
 
         if self.primary_stem_name is None:
             self.primary_stem_name = self.model_data.get("primary_stem", "Vocals")
@@ -103,14 +130,28 @@ class CommonSeparator:
         self.is_bv_model = self.model_data.get("is_bv_model", False)
         self.bv_model_rebalance = self.model_data.get("is_bv_model_rebalanced", 0)
 
-        self.logger.debug(f"Common params: model_name={self.model_name}, model_path={self.model_path}")
-        self.logger.debug(f"Common params: output_dir={self.output_dir}, output_format={self.output_format}")
-        self.logger.debug(f"Common params: normalization_threshold={self.normalization_threshold}, amplification_threshold={self.amplification_threshold}")
-        self.logger.debug(f"Common params: enable_denoise={self.enable_denoise}, output_single_stem={self.output_single_stem}")
-        self.logger.debug(f"Common params: invert_using_spec={self.invert_using_spec}, sample_rate={self.sample_rate}")
+        self.logger.debug(
+            f"Common params: model_name={self.model_name}, model_path={self.model_path}"
+        )
+        self.logger.debug(
+            f"Common params: output_dir={self.output_dir}, output_format={self.output_format}"
+        )
+        self.logger.debug(
+            f"Common params: normalization_threshold={self.normalization_threshold}, amplification_threshold={self.amplification_threshold}"
+        )
+        self.logger.debug(
+            f"Common params: enable_denoise={self.enable_denoise}, output_single_stem={self.output_single_stem}"
+        )
+        self.logger.debug(
+            f"Common params: invert_using_spec={self.invert_using_spec}, sample_rate={self.sample_rate}"
+        )
 
-        self.logger.debug(f"Common params: primary_stem_name={self.primary_stem_name}, secondary_stem_name={self.secondary_stem_name}")
-        self.logger.debug(f"Common params: is_karaoke={self.is_karaoke}, is_bv_model={self.is_bv_model}, bv_model_rebalance={self.bv_model_rebalance}")
+        self.logger.debug(
+            f"Common params: primary_stem_name={self.primary_stem_name}, secondary_stem_name={self.secondary_stem_name}"
+        )
+        self.logger.debug(
+            f"Common params: is_karaoke={self.is_karaoke}, is_bv_model={self.is_bv_model}, bv_model_rebalance={self.bv_model_rebalance}"
+        )
 
         # File-specific variables which need to be cleared between processing different audio inputs
         self.audio_file_path = None
@@ -131,7 +172,11 @@ class CommonSeparator:
         if primary_stem in self.STEM_PAIR_MAPPER:
             secondary_stem = self.STEM_PAIR_MAPPER[primary_stem]
         else:
-            secondary_stem = primary_stem.replace(self.NO_STEM, "") if self.NO_STEM in primary_stem else f"{self.NO_STEM}{primary_stem}"
+            secondary_stem = (
+                primary_stem.replace(self.NO_STEM, "")
+                if self.NO_STEM in primary_stem
+                else f"{self.NO_STEM}{primary_stem}"
+            )
 
         return secondary_stem
 
@@ -145,7 +190,9 @@ class CommonSeparator:
         """
         Finalizes the processing of a stem by writing the audio to a file and returning the processed source.
         """
-        self.logger.debug(f"Finalizing {stem_name} stem processing and writing audio...")
+        self.logger.debug(
+            f"Finalizing {stem_name} stem processing and writing audio..."
+        )
         self.write_audio(stem_path, source)
 
         return {stem_name: source}
@@ -191,7 +238,10 @@ class CommonSeparator:
         Update the dictionary for the given model_architecture with the new model name and its sources.
         Use the model_architecture as a key to access the corresponding cache source mapper dictionary.
         """
-        self.cached_sources_map[model_architecture] = {**self.cached_sources_map.get(model_architecture, {}), **{model_name: sources}}
+        self.cached_sources_map[model_architecture] = {
+            **self.cached_sources_map.get(model_architecture, {}),
+            **{model_name: sources},
+        }
 
     def prepare_mix(self, mix):
         """
@@ -205,7 +255,9 @@ class CommonSeparator:
         if not isinstance(mix, np.ndarray):
             self.logger.debug(f"Loading audio from file: {mix}")
             mix, sr = librosa.load(mix, mono=False, sr=self.sample_rate)
-            self.logger.debug(f"Audio loaded. Sample rate: {sr}, Audio shape: {mix.shape}")
+            self.logger.debug(
+                f"Audio loaded. Sample rate: {sr}, Audio shape: {mix.shape}"
+            )
         else:
             # Transpose the mix if it's already an ndarray (expected shape: [channels, samples])
             self.logger.debug("Transposing the provided mix array.")
@@ -241,7 +293,9 @@ class CommonSeparator:
         # Get the duration of the input audio file
         duration_seconds = librosa.get_duration(filename=self.audio_file_path)
         duration_hours = duration_seconds / 3600
-        self.logger.info(f"Audio duration is {duration_hours:.2f} hours ({duration_seconds:.2f} seconds).")
+        self.logger.info(
+            f"Audio duration is {duration_hours:.2f} hours ({duration_seconds:.2f} seconds)."
+        )
 
         if self.use_soundfile:
             self.logger.warning(f"Using soundfile for writing.")
@@ -256,7 +310,11 @@ class CommonSeparator:
         """
         self.logger.debug(f"Entering write_audio_pydub with stem_path: {stem_path}")
 
-        stem_source = spec_utils.normalize(wave=stem_source, max_peak=self.normalization_threshold, min_peak=self.amplification_threshold)
+        stem_source = spec_utils.normalize(
+            wave=stem_source,
+            max_peak=self.normalization_threshold,
+            min_peak=self.amplification_threshold,
+        )
 
         # Check if the numpy array is empty or contains very low values
         if np.max(np.abs(stem_source)) < 1e-6:
@@ -281,11 +339,18 @@ class CommonSeparator:
         stem_source_interleaved[0::2] = stem_source[:, 0]  # Left channel
         stem_source_interleaved[1::2] = stem_source[:, 1]  # Right channel
 
-        self.logger.debug(f"Interleaved audio data shape: {stem_source_interleaved.shape}")
+        self.logger.debug(
+            f"Interleaved audio data shape: {stem_source_interleaved.shape}"
+        )
 
         # Create a pydub AudioSegment
         try:
-            audio_segment = AudioSegment(stem_source_interleaved.tobytes(), frame_rate=self.sample_rate, sample_width=stem_source.dtype.itemsize, channels=2)
+            audio_segment = AudioSegment(
+                stem_source_interleaved.tobytes(),
+                frame_rate=self.sample_rate,
+                sample_width=stem_source.dtype.itemsize,
+                channels=2,
+            )
             self.logger.debug("Created AudioSegment successfully.")
         except (IOError, ValueError) as e:
             self.logger.error(f"Specific error creating AudioSegment: {e}")
@@ -301,7 +366,11 @@ class CommonSeparator:
             file_format = "matroska"
 
         # Set the bitrate to 320k for mp3 files if output_bitrate is not specified
-        bitrate = "320k" if file_format == "mp3" and self.output_bitrate is None else self.output_bitrate
+        bitrate = (
+            "320k"
+            if file_format == "mp3" and self.output_bitrate is None
+            else self.output_bitrate
+        )
 
         # Export using the determined format
         try:
@@ -325,7 +394,9 @@ class CommonSeparator:
                 stem_source = np.ascontiguousarray(stem_source)
             # Otherwise, perform interleaving
             else:
-                stereo_interleaved = np.empty((2 * stem_source.shape[0],), dtype=np.int16)
+                stereo_interleaved = np.empty(
+                    (2 * stem_source.shape[0],), dtype=np.int16
+                )
                 # Left channel
                 stereo_interleaved[0::2] = stem_source[:, 0]
                 # Right channel
@@ -378,6 +449,10 @@ class CommonSeparator:
         Gets the output path for a stem based on the stem name and custom output names.
         """
         if custom_output_names and stem_name in custom_output_names:
-            return os.path.join(f"{custom_output_names[stem_name]}.{self.output_format.lower()}")
+            return os.path.join(
+                f"{custom_output_names[stem_name]}.{self.output_format.lower()}"
+            )
         else:
-            return os.path.join(f"{self.audio_file_base}_({stem_name})_{self.model_name}.{self.output_format.lower()}")
+            return os.path.join(
+                f"{self.audio_file_base}_({stem_name})_{self.model_name}.{self.output_format.lower()}"
+            )
