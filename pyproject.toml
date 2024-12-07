@@ -62,4 +62,4 @@ PolUVR-app = 'PolUVR.app:main'
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
-pytest-cov = "^4.1.0"
+pytest-cov = ">=4.1,<7.0"
