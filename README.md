@@ -55,16 +55,22 @@ To check if `PolUVR` is correctly configured to use FFmpeg, run `PolUVR --env_in
 FFmpeg installed
 ```
 
-If you installed `PolUVR` using `conda` or `docker`, FFmpeg should already be available in your environment. Otherwise, install FFmpeg manually:
+If it says that FFmpeg is missing or an error occurs, install FFmpeg using the following commands:
 
 **Debian/Ubuntu:**
-```sh
-apt-get update; apt-get install -y ffmpeg
-```
-
+* ```sh
+  apt-get update; apt-get install -y ffmpeg
+  ```
 **macOS:**
+* ```sh
+  brew update; brew install ffmpeg
+  ```
+**Windows:**
+* Follow this guide: [Install-FFmpeg-on-Windows](https://www.wikihow.com/Install-FFmpeg-on-Windows)
+
+If you cloned the repository, you can use the following command to install FFmpeg:
 ```sh
-brew update; brew install ffmpeg
+PolUVR-ffmpeg
 ```
 
 ---
