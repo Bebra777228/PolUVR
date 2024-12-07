@@ -35,13 +35,38 @@ class MDXCSeparator(CommonSeparator):
         # While there are similarities between architectures for some of these (e.g. batch_size), they are deliberately configured
         # this way as they have architecture-specific default values.
         self.segment_size = arch_config.get("segment_size", 256)
+        
+        # Ensure segment_size is within the range [32, 4000]
+        if self.segment_size < 32:
+            self.logger.warning(f"segment_size {self.segment_size} is less than the minimum allowed value of 32. Setting segment_size to 32.")
+            self.segment_size = 32
+        elif self.segment_size > 4000:
+            self.logger.warning(f"segment_size {self.segment_size} is greater than the maximum allowed value of 4000. Setting segment_size to 4000.")
+            self.segment_size = 4000
 
         # Whether or not to use the segment size from model config, or the default
         # The segment size is set based on the value provided in a chosen model's associated config file (yaml).
         self.override_model_segment_size = arch_config.get("override_model_segment_size", False)
 
         self.overlap = arch_config.get("overlap", 8)
+        
+        # Ensure overlap is within the range [2, 50]
+        if self.overlap < 2:
+            self.logger.warning(f"overlap {self.overlap} is less than the minimum allowed value of 2. Setting overlap to 2.")
+            self.overlap = 2
+        elif self.overlap > 50:
+            self.logger.warning(f"segment_size {self.overlap} is greater than the maximum allowed value of 50. Setting overlap to 50.")
+            self.overlap = 50
+        
         self.batch_size = arch_config.get("batch_size", 1)
+
+        # Ensure batch_size is within the range [1, 16]
+        if self.batch_size < 1:
+            self.logger.warning(f"batch_size {self.batch_size} is less than the minimum allowed value of 1. Setting batch_size to 1.")
+            self.batch_size = 1
+        elif self.batch_size > 16:
+            self.logger.warning(f"batch_size {self.batch_size} is greater than the maximum allowed value of 16. Setting batch_size to 16.")
+            self.batch_size = 16
 
         # Amount of pitch shift to apply during processing (this does NOT affect the pitch of the output audio):
         # • Whole numbers indicate semitones.
@@ -49,6 +74,14 @@ class MDXCSeparator(CommonSeparator):
         # • Upping the pitch can be better for tracks with deeper vocals.
         # • Dropping the pitch may take more processing time but works well for tracks with high-pitched vocals.
         self.pitch_shift = arch_config.get("pitch_shift", 0)
+
+        # Ensure pitch_shift is within the range [-24, 24]
+        if self.pitch_shift < -24:
+            self.logger.warning(f"pitch_shift {self.pitch_shift} is less than the minimum allowed value of -24. Setting pitch_shift to -24.")
+            self.pitch_shift = -24
+        elif self.pitch_shift > 24:
+            self.logger.warning(f"pitch_shift {self.pitch_shift} is greater than the maximum allowed value of 24. Setting pitch_shift to 24.")
+            self.pitch_shift = 24
 
         self.logger.debug(f"MDXC arch params: batch_size={self.batch_size}, segment_size={self.segment_size}, overlap={self.overlap}")
         self.logger.debug(f"MDXC arch params: override_model_segment_size={self.override_model_segment_size}, pitch_shift={self.pitch_shift}")

@@ -68,6 +68,14 @@ class VRSeparator(CommonSeparator):
         # post_process_threshold values = ('0.1', '0.2', '0.3')
         self.post_process_threshold = arch_config.get("post_process_threshold", 0.2)
 
+        # Ensure post_process_threshold is within the range [0.1, 0.3]
+        if self.post_process_threshold < 0.1:
+            self.logger.warning(f"post_process_threshold {self.post_process_threshold} is less than the minimum allowed value of 0.1. Setting post_process_threshold to 0.1.")
+            self.post_process_threshold = 0.1
+        elif self.post_process_threshold > 0.3:
+            self.logger.warning(f"post_process_threshold {self.post_process_threshold} is greater than the maximum allowed value of 0.3. Setting post_process_threshold to 0.3.")
+            self.post_process_threshold = 0.3
+
         # Number of batches to be processed at a time.
         # - Higher values mean more RAM usage but slightly faster processing times.
         # - Lower values mean less RAM usage but slightly longer processing times.
@@ -76,11 +84,27 @@ class VRSeparator(CommonSeparator):
         # Andrew note: for some reason, lower batch sizes seem to cause broken output for VR arch; need to investigate why
         self.batch_size = arch_config.get("batch_size", 1)
 
+        # Ensure batch_size is within the range [1, 16]
+        if self.batch_size < 1:
+            self.logger.warning(f"batch_size {self.batch_size} is less than the minimum allowed value of 1. Setting batch_size to 1.")
+            self.batch_size = 1
+        elif self.batch_size > 16:
+            self.logger.warning(f"batch_size {self.batch_size} is greater than the maximum allowed value of 16. Setting batch_size to 16.")
+            self.batch_size = 16
+
         # Select window size to balance quality and speed:
         # - 1024 - Quick but lesser quality.
         # - 512 - Medium speed and quality.
         # - 320 - Takes longer but may offer better quality.
         self.window_size = arch_config.get("window_size", 512)
+
+        # Ensure window_size is within the range [320, 1024]
+        if self.window_size < 320:
+            self.logger.warning(f"window_size {self.window_size} is less than the minimum allowed value of 320. Setting window_size to 320.")
+            self.window_size = 320
+        elif self.window_size > 1024:
+            self.logger.warning(f"window_size {self.window_size} is greater than the maximum allowed value of 1024. Setting window_size to 1024.")
+            self.window_size = 1024
 
         # The application will mirror the missing frequency range of the output.
         self.high_end_process = arch_config.get("high_end_process", False)
@@ -92,7 +116,20 @@ class VRSeparator(CommonSeparator):
         # - Bigger values mean deeper extractions.
         # - Typically, it's set to 5 for vocals & instrumentals.
         # - Values beyond 5 might muddy the sound for non-vocal models.
-        self.aggression = float(int(arch_config.get("aggression", 5)) / 100)
+        # Get the aggression value from the configuration and convert it to an integer
+        aggression_value = int(arch_config.get("aggression", 5))
+
+        # Ensure the aggression is within the range [0, 100]
+        if aggression_value < 0:
+            self.logger.warning(f"aggression {aggression_value} is less than the minimum allowed value of 0. Setting aggression to 0.")
+            aggression_value = 0
+        elif aggression_value > 100:
+            self.logger.warning(f"aggression {aggression_value} is greater than the maximum allowed value of 100. Setting aggression to 100.")
+            aggression_value = 100
+
+        # Convert the aggression_value to a percentage value
+        self.aggression = float(aggression_value / 100)
+
 
         self.aggressiveness = {"value": self.aggression, "split_bin": self.model_params.param["band"][1]["crop_stop"], "aggr_correction": self.model_params.param.get("aggr_correction")}
 

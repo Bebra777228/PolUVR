@@ -31,12 +31,28 @@ class MDXSeparator(CommonSeparator):
         # - Smaller sizes consume less resources.
         # - Bigger sizes consume more resources, but may provide better results.
         # - Default size is 256. Quality can change based on your pick.
-        self.segment_size = arch_config.get("segment_size")
+        self.segment_size = arch_config.get("segment_size", 256)
+
+        # Ensure segment_size is within the range [32, 4000]
+        if self.segment_size < 32:
+            self.logger.warning(f"segment_size {self.segment_size} is less than the minimum allowed value of 32. Setting segment_size to 32.")
+            self.segment_size = 32
+        elif self.segment_size > 4000:
+            self.logger.warning(f"segment_size {self.segment_size} is greater than the maximum allowed value of 4000. Setting segment_size to 4000.")
+            self.segment_size = 4000
 
         # This option controls the amount of overlap between prediction windows.
         #  - Higher values can provide better results, but will lead to longer processing times.
         #  - For Non-MDX23C models: You can choose between 0.001-0.999
-        self.overlap = arch_config.get("overlap")
+        self.overlap = arch_config.get("overlap", 0.25)
+
+        # Ensure overlap is within the range [0.001, 0.99]
+        if self.overlap < 0.001:
+            self.logger.warning(f"overlap {self.overlap} is less than the minimum allowed value of 0.001. Setting overlap to 0.001.")
+            self.overlap = 0.001
+        elif self.overlap > 0.999:
+            self.logger.warning(f"overlap {self.overlap} is greater than the maximum allowed value of 0.999. Setting overlap to 0.999.")
+            self.overlap = 0.999
 
         # Number of batches to be processed at a time.
         # - Higher values mean more RAM usage but slightly faster processing times.
@@ -44,6 +60,14 @@ class MDXSeparator(CommonSeparator):
         # - Batch size value has no effect on output quality.
         # BATCH_SIZE = ('1', ''2', '3', '4', '5', '6', '7', '8', '9', '10')
         self.batch_size = arch_config.get("batch_size", 1)
+
+        # Ensure batch_size is within the range [1, 16]
+        if self.batch_size < 1:
+            self.logger.warning(f"batch_size {self.batch_size} is less than the minimum allowed value of 1. Setting batch_size to 1.")
+            self.batch_size = 1
+        elif self.batch_size > 16:
+            self.logger.warning(f"batch_size {self.batch_size} is greater than the maximum allowed value of 16. Setting batch_size to 16.")
+            self.batch_size = 16
 
         # hop_length is equivalent to the more commonly used term "stride" in convolutional neural networks
         # In machine learning, particularly in the context of convolutional neural networks (CNNs),
@@ -56,7 +80,15 @@ class MDXSeparator(CommonSeparator):
         # Computational Efficiency: Increasing the stride can decrease the computational load.
         # Field of View: A higher stride means that each step of the filter takes into account a wider area of the input image.
         #   This can be beneficial when the model needs to capture more global features rather than focusing on finer details.
-        self.hop_length = arch_config.get("hop_length")
+        self.hop_length = arch_config.get("hop_length", 1024)
+
+        # Ensure hop_length is within the range [32, 2048]
+        if self.hop_length < 32:
+            self.logger.warning(f"hop_length {self.hop_length} is less than the minimum allowed value of 32. Setting hop_length to 32.")
+            self.hop_length = 32
+        elif self.hop_length > 2048:
+            self.logger.warning(f"hop_length {self.hop_length} is greater than the maximum allowed value of 2048. Setting hop_length to 2048.")
+            self.hop_length = 2048
 
         # If enabled, model will be run twice to reduce noise in output audio.
         self.enable_denoise = arch_config.get("enable_denoise")

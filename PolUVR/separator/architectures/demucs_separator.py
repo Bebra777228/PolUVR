@@ -45,7 +45,15 @@ class DemucsSeparator(CommonSeparator):
         #           '25', '30', '35', '40', '45', '50',
         #           '55', '60', '65', '70', '75', '80',
         #           '85', '90', '95', '100')
-        self.segment_size = arch_config.get("segment_size", "Default")
+        self.segment_size = arch_config.get("segment_size", 40)
+        
+        # Ensure segment_size is within the range [1, 100]
+        if self.segment_size < 1:
+            self.logger.warning(f"segment_size {self.segment_size} is less than the minimum allowed value of 1. Setting segment_size to 1.")
+            self.segment_size = 1
+        elif self.segment_size > 100:
+            self.logger.warning(f"segment_size {self.segment_size} is greater than the maximum allowed value of 100. Setting segment_size to 100.")
+            self.segment_size = 100
 
         # Performs multiple predictions with random shifts of the input and averages them.
         # The higher number of shifts, the longer the prediction will take.
@@ -56,11 +64,27 @@ class DemucsSeparator(CommonSeparator):
         #                 18, 19, 20)
         self.shifts = arch_config.get("shifts", 2)
 
+        # Ensure shifts is within the range [0, 20]
+        if self.shifts < 0:
+            self.logger.warning(f"shifts {self.shifts} is less than the minimum allowed value of 0. Setting shifts to 0.")
+            self.shifts = 0
+        elif self.shifts > 20:
+            self.logger.warning(f"shifts {self.shifts} is greater than the maximum allowed value of 20. Setting shifts to 20.")
+            self.shifts = 20
+
         # This option controls the amount of overlap between prediction windows.
         #  - Higher values can provide better results, but will lead to longer processing times.
         #  - You can choose between 0.001-0.999
         # DEMUCS_OVERLAP = (0.25, 0.50, 0.75, 0.99)
         self.overlap = arch_config.get("overlap", 0.25)
+
+        # Ensure overlap is within the range [0.001, 0.99]
+        if self.overlap < 0.001:
+            self.logger.warning(f"overlap {self.overlap} is less than the minimum allowed value of 0.001. Setting overlap to 0.001.")
+            self.overlap = 0.001
+        elif self.overlap > 0.999:
+            self.logger.warning(f"overlap {self.overlap} is greater than the maximum allowed value of 0.999. Setting overlap to 0.999.")
+            self.overlap = 0.999
 
         # Enables "Segments". Deselecting this option is only recommended for those with powerful PCs.
         self.segments_enabled = arch_config.get("segments_enabled", True)

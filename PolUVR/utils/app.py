@@ -359,7 +359,7 @@ with gr.Blocks(
                 roformer_seg_size = gr.Slider(minimum=32, maximum=4000, step=32, value=256, label="Segment Size", info="Larger consumes more resources, but may give better results.")
                 roformer_override_seg_size = gr.Checkbox(value=False, label="Override segment size", info="Override model default segment size instead of using the model default value.")
                 roformer_overlap = gr.Slider(minimum=2, maximum=10, step=1, value=8, label="Overlap", info="Amount of overlap between prediction windows. Lower is better but slower.")
-                roformer_pitch_shift = gr.Slider(minimum=-12, maximum=12, step=1, value=0, label="Pitch shift", info="Shift audio pitch by a number of semitones while processing. may improve output for deep/high vocals.")
+                roformer_pitch_shift = gr.Slider(minimum=-24, maximum=24, step=1, value=0, label="Pitch shift", info="Shift audio pitch by a number of semitones while processing. may improve output for deep/high vocals.")
         with gr.Row():
             roformer_audio = gr.Audio(label="Input Audio", type="filepath")
         with gr.Row():
@@ -376,7 +376,7 @@ with gr.Blocks(
                 mdx23c_seg_size = gr.Slider(minimum=32, maximum=4000, step=32, value=256, label="Segment Size", info="Larger consumes more resources, but may give better results.")
                 mdx23c_override_seg_size = gr.Checkbox(value=False, label="Override segment size", info="Override model default segment size instead of using the model default value.")
                 mdx23c_overlap = gr.Slider(minimum=2, maximum=50, step=1, value=8, label="Overlap", info="Amount of overlap between prediction windows. Higher is better but slower.")
-                mdx23c_pitch_shift = gr.Slider(minimum=-12, maximum=12, step=1, value=0, label="Pitch shift", info="Shift audio pitch by a number of semitones while processing. may improve output for deep/high vocals.")
+                mdx23c_pitch_shift = gr.Slider(minimum=-24, maximum=24, step=1, value=0, label="Pitch shift", info="Shift audio pitch by a number of semitones while processing. may improve output for deep/high vocals.")
         with gr.Row():
             mdx23c_audio = gr.Audio(label="Input Audio", type="filepath")
         with gr.Row():
@@ -408,7 +408,7 @@ with gr.Blocks(
                 vr_model = gr.Dropdown(label="Select the Model", choices=VR_ARCH_MODELS)
             with gr.Row():
                 vr_window_size = gr.Slider(minimum=320, maximum=1024, step=32, value=512, label="Window Size", info="Balance quality and speed. 1024 = fast but lower, 320 = slower but better quality.")
-                vr_aggression = gr.Slider(minimum=1, maximum=50, step=1, value=5, label="Agression", info="Intensity of primary stem extraction.")
+                vr_aggression = gr.Slider(minimum=1, maximum=100, step=1, value=5, label="Agression", info="Intensity of primary stem extraction.")
                 vr_tta = gr.Checkbox(value=False, label="TTA", info="Enable Test-Time-Augmentation; slow but improves quality.")
                 vr_post_process = gr.Checkbox(value=False, label="Post Process", info="Identify leftover artifacts within vocal output; may improve separation for some songs.")
                 vr_post_process_threshold = gr.Slider(minimum=0.1, maximum=0.3, step=0.1, value=0.2, label="Post Process Threshold", info="Threshold for post-processing.")
