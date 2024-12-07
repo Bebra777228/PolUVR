@@ -141,22 +141,23 @@ def prepare_output_dir(input_file, output_dir):
         raise RuntimeError(f"Failed to prepare output directory {out_dir}: {e}")
     return out_dir
 
-def rename_stems(audio, vocals_stem, instrumental_stem, other_stem, drums_stem, bass_stem, guitar_stem, piano_stem):
+def rename_stems(audio, vocals_stem, instrumental_stem, other_stem, drums_stem, bass_stem, guitar_stem, piano_stem, model):
     base_name = os.path.splitext(os.path.basename(audio))[0]
     stems = {
-        "Vocals": vocals_stem.replace("{base_name}", base_name),
-        "Instrumental": instrumental_stem.replace("{base_name}", base_name),
-        "Drums": drums_stem.replace("{base_name}", base_name),
-        "Bass": bass_stem.replace("{base_name}", base_name),
-        "Other": other_stem.replace("{base_name}", base_name),
-        "Guitar": guitar_stem.replace("{base_name}", base_name),
-        "Piano": piano_stem.replace("{base_name}", base_name),
+        "Vocals": vocals_stem.replace("NAME", base_name).replace("STEM", "Vocals").replace("MODEL", model),
+        "Instrumental": instrumental_stem.replace("NAME", base_name).replace("STEM", "Instrumental").replace("MODEL", model),
+        "Drums": drums_stem.replace("NAME", base_name).replace("STEM", "Drums").replace("MODEL", model),
+        "Bass": bass_stem.replace("NAME", base_name).replace("STEM", "Bass").replace("MODEL", model),
+        "Other": other_stem.replace("NAME", base_name).replace("STEM", "Other").replace("MODEL", model),
+        "Guitar": guitar_stem.replace("NAME", base_name).replace("STEM", "Guitar").replace("MODEL", model),
+        "Piano": piano_stem.replace("NAME", base_name).replace("STEM", "Piano").replace("MODEL", model),
     }
     return stems
 
+# Обновленные функции для сепарации
 def roformer_separator(audio, model_key, seg_size, override_seg_size, overlap, pitch_shift, model_dir, out_dir, out_format, norm_thresh, amp_thresh, batch_size, vocals_stem, instrumental_stem, other_stem, drums_stem, bass_stem, guitar_stem, piano_stem, progress=gr.Progress(track_tqdm=True)):
     """Separate audio using Roformer model."""
-    stemname = rename_stems(audio, vocals_stem, instrumental_stem, other_stem, drums_stem, bass_stem, guitar_stem, piano_stem)
+    stemname = rename_stems(audio, vocals_stem, instrumental_stem, other_stem, drums_stem, bass_stem, guitar_stem, piano_stem, model_key)
     print_message(audio, model_key)
     model = ROFORMER_MODELS[model_key]
     try:
@@ -192,7 +193,7 @@ def roformer_separator(audio, model_key, seg_size, override_seg_size, overlap, p
 
 def mdx23c_separator(audio, model, seg_size, override_seg_size, overlap, pitch_shift, model_dir, out_dir, out_format, norm_thresh, amp_thresh, batch_size, vocals_stem, instrumental_stem, other_stem, drums_stem, bass_stem, guitar_stem, piano_stem, progress=gr.Progress(track_tqdm=True)):
     """Separate audio using MDX23C model."""
-    stemname = rename_stems(audio, vocals_stem, instrumental_stem, other_stem, drums_stem, bass_stem, guitar_stem, piano_stem)
+    stemname = rename_stems(audio, vocals_stem, instrumental_stem, other_stem, drums_stem, bass_stem, guitar_stem, piano_stem, model)
     print_message(audio, model)
     try:
         out_dir = prepare_output_dir(audio, out_dir)
@@ -227,7 +228,7 @@ def mdx23c_separator(audio, model, seg_size, override_seg_size, overlap, pitch_s
 
 def mdx_separator(audio, model, hop_length, seg_size, overlap, denoise, model_dir, out_dir, out_format, norm_thresh, amp_thresh, batch_size, vocals_stem, instrumental_stem, other_stem, drums_stem, bass_stem, guitar_stem, piano_stem, progress=gr.Progress(track_tqdm=True)):
     """Separate audio using MDX-NET model."""
-    stemname = rename_stems(audio, vocals_stem, instrumental_stem, other_stem, drums_stem, bass_stem, guitar_stem, piano_stem)
+    stemname = rename_stems(audio, vocals_stem, instrumental_stem, other_stem, drums_stem, bass_stem, guitar_stem, piano_stem, model)
     print_message(audio, model)
     try:
         out_dir = prepare_output_dir(audio, out_dir)
@@ -262,7 +263,7 @@ def mdx_separator(audio, model, hop_length, seg_size, overlap, denoise, model_di
 
 def vr_separator(audio, model, window_size, aggression, tta, post_process, post_process_threshold, high_end_process, model_dir, out_dir, out_format, norm_thresh, amp_thresh, batch_size, vocals_stem, instrumental_stem, other_stem, drums_stem, bass_stem, guitar_stem, piano_stem, progress=gr.Progress(track_tqdm=True)):
     """Separate audio using VR ARCH model."""
-    stemname = rename_stems(audio, vocals_stem, instrumental_stem, other_stem, drums_stem, bass_stem, guitar_stem, piano_stem)
+    stemname = rename_stems(audio, vocals_stem, instrumental_stem, other_stem, drums_stem, bass_stem, guitar_stem, piano_stem, model)
     print_message(audio, model)
     try:
         out_dir = prepare_output_dir(audio, out_dir)
@@ -299,7 +300,7 @@ def vr_separator(audio, model, window_size, aggression, tta, post_process, post_
 
 def demucs_separator(audio, model, seg_size, shifts, overlap, segments_enabled, model_dir, out_dir, out_format, norm_thresh, amp_thresh, vocals_stem, instrumental_stem, other_stem, drums_stem, bass_stem, guitar_stem, piano_stem, progress=gr.Progress(track_tqdm=True)):
     """Separate audio using Demucs model."""
-    stemname = rename_stems(audio, vocals_stem, instrumental_stem, other_stem, drums_stem, bass_stem, guitar_stem, piano_stem)
+    stemname = rename_stems(audio, vocals_stem, instrumental_stem, other_stem, drums_stem, bass_stem, guitar_stem, piano_stem, model)
     print_message(audio, model)
     try:
         out_dir = prepare_output_dir(audio, out_dir)
@@ -327,7 +328,7 @@ def demucs_separator(audio, model, seg_size, shifts, overlap, segments_enabled, 
         print(f"Separation complete!\nResults: {', '.join(separation)}")
 
         stems = [os.path.join(out_dir, file_name) for file_name in separation]
-        
+
         if model == "htdemucs_6s.yaml":
             return stems[0], stems[1], stems[2], stems[3], stems[4], stems[5]
         else:
@@ -336,6 +337,7 @@ def demucs_separator(audio, model, seg_size, shifts, overlap, segments_enabled, 
         raise RuntimeError(f"Demucs separation failed: {e}") from e
 
 def update_stems(model):
+    """Update the visibility of stem outputs based on the selected Demucs model."""
     if model == "htdemucs_6s.yaml":
         return gr.update(visible=True)
     else:
@@ -453,22 +455,26 @@ with gr.Blocks(
                   output_format = gr.Dropdown(value="wav", choices=["wav", "flac", "mp3"], label="Output Format", info="The format of the output audio file.")
               with gr.Row():
                   norm_threshold = gr.Slider(minimum=0.1, maximum=1, step=0.1, value=0.9, label="Normalization threshold", info="The threshold for audio normalization.")
-                  amp_threshold = gr.Slider(minimum=0.1, maximum=1, step=0.1, value=0.0, label="Amplification threshold", info="The threshold for audio amplification.")
+                  amp_threshold = gr.Slider(minimum=0.0, maximum=1, step=0.1, value=0.0, label="Amplification threshold", info="The threshold for audio amplification.")
               with gr.Row():
                   batch_size = gr.Slider(minimum=1, maximum=16, step=1, value=1, label="Batch Size", info="Larger consumes more RAM but may process slightly faster.")
 
         with gr.Accordion("Rename Stems", open=False):
-            gr.HTML("<h3> `{base_name}` - input file name </h3>")
+            gr.HTML("<h3> NAME - Input File Name </h3>")
+            gr.HTML("<h3> STEM - Stem Name (e.g., Vocals, Instrumental) </h3>")
+            gr.HTML("<h3> MODEL - Model Name (e.g., BS-Roformer-Viperx-1297) </h3>")
+            gr.HTML("<h3> Usage Example: NAME_(STEM)_MODEL </h3>")
+            gr.HTML("<h3> Output File Name: Music_(Vocals)_BS-Roformer-Viperx-1297 </h3>")
             with gr.Row():
-                vocals_stem = gr.Textbox(value="{base_name}_(Vocals)", label="Vocals Stem", placeholder="{base_name}_(Vocals)")
-                instrumental_stem = gr.Textbox(value="{base_name}_(Instrumental)", label="Instrumental Stem", placeholder="{base_name}_(Instrumental)")
-                other_stem = gr.Textbox(value="{base_name}_(Other)", label="Other Stem", placeholder="{base_name}_(Other)")
+                vocals_stem = gr.Textbox(value="NAME_(STEM)_MODEL", label="Vocals Stem", info="Output example: Music_(Vocals)_BS-Roformer-Viperx-1297", placeholder="NAME_(STEM)_MODEL")
+                instrumental_stem = gr.Textbox(value="NAME_(STEM)_MODEL", label="Instrumental Stem", info="Пример вывода: Music_(Instrumental)_BS-Roformer-Viperx-1297", placeholder="NAME_(STEM)_MODEL")
+                other_stem = gr.Textbox(value="NAME_(STEM)_MODEL", label="Other Stem", info="Output example: Music_(Other)_BS-Roformer-Viperx-1297", placeholder="NAME_(STEM)_MODEL")
             with gr.Row():
-                drums_stem = gr.Textbox(value="{base_name}_(Drums)", label="Drums Stem", placeholder="{base_name}_(Drums)")
-                bass_stem = gr.Textbox(value="{base_name}_(Bass)", label="Bass Stem", placeholder="{base_name}_(Bass)")
+                drums_stem = gr.Textbox(value="NAME_(STEM)_MODEL", label="Drums Stem", info="Output example: Music_(Drums)_BS-Roformer-Viperx-1297", placeholder="NAME_(STEM)_MODEL")
+                bass_stem = gr.Textbox(value="NAME_(STEM)_MODEL", label="Bass Stem", info="Output example: Music_(Bass)_BS-Roformer-Viperx-1297", placeholder="NAME_(STEM)_MODEL")
             with gr.Row():
-                guitar_stem = gr.Textbox(value="{base_name}_(Guitar)", label="Guitar Stem", placeholder="{base_name}_(Guitar)")
-                piano_stem = gr.Textbox(value="{base_name}_(Piano)", label="Piano Stem", placeholder="{base_name}_(Piano)")
+                guitar_stem = gr.Textbox(value="NAME_(STEM)_MODEL", label="Guitar Stem", info="Output example: Music_(Guitar)_BS-Roformer-Viperx-1297", placeholder="NAME_(STEM)_MODEL")
+                piano_stem = gr.Textbox(value="NAME_(STEM)_MODEL", label="Piano Stem", info="Output example: Music_(Piano)_BS-Roformer-Viperx-1297", placeholder="NAME_(STEM)_MODEL")
 
     demucs_model.change(update_stems, inputs=[demucs_model], outputs=stem6)
 
@@ -600,7 +606,7 @@ with gr.Blocks(
     )
 
 def main():
-    app.launch(share=True)
+    app.launch(share=True, debug=True)
 
 if __name__ == "__main__":
     main()
