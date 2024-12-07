@@ -15,10 +15,10 @@ from diffq import DiffQuantizer
 
 from .hdemucs import HDemucs
 from .model import Demucs
+from .repo import LocalRepo  # noqa
 from .repo import (
     AnyModelRepo,
     BagOnlyRepo,
-    LocalRepo,  # noqa
     ModelLoadingError,
     ModelOnlyRepo,
     RemoteRepo,
