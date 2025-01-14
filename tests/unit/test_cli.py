@@ -123,6 +123,31 @@ def test_cli_model_filename_argument(common_expected_args):
             mock_separator.assert_called_once_with(**common_expected_args)
             mock_separator_instance.load_model.assert_called_once_with(model_filename="Custom_Model.onnx")
 
+# Test using model name argument
+def test_cli_model_BSroformer_argument(common_expected_args):
+    test_args = ["cli.py", "test_audio.mp3", "--model_filename=model_bs_roformer_ep_317_sdr_12.9755.ckpt"]
+    with patch("sys.argv", test_args):
+        with patch("PolUVR.separator.Separator") as mock_separator:
+            mock_separator_instance = mock_separator.return_value
+            mock_separator_instance.separate.return_value = ["output_file.mp3"]
+            main()
+
+            # Assertions
+            mock_separator.assert_called_once_with(**common_expected_args)
+            mock_separator_instance.load_model.assert_called_once_with(model_filename="model_bs_roformer_ep_317_sdr_12.9755.ckpt")
+
+# Test using model name argument
+def test_cli_model_MELroformer_argument(common_expected_args):
+    test_args = ["cli.py", "test_audio.mp3", "--model_filename=model_mel_band_roformer_ep_3005_sdr_11.4360.ckpt"]
+    with patch("sys.argv", test_args):
+        with patch("PolUVR.separator.Separator") as mock_separator:
+            mock_separator_instance = mock_separator.return_value
+            mock_separator_instance.separate.return_value = ["output_file.mp3"]
+            main()
+
+            # Assertions
+            mock_separator.assert_called_once_with(**common_expected_args)
+            mock_separator_instance.load_model.assert_called_once_with(model_filename="model_mel_band_roformer_ep_3005_sdr_11.4360.ckpt")
 
 # Test using output directory argument
 def test_cli_output_dir_argument(common_expected_args):
