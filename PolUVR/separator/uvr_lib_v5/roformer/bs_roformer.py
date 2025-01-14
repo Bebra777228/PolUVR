@@ -1,3 +1,4 @@
+from __future__ import annotations
 from functools import partial
 
 import torch
@@ -7,7 +8,7 @@ import torch.nn.functional as F
 
 from .attend import Attend
 
-from beartype.typing import Tuple, Optional, List, Callable
+from beartype.typing import Callable
 from beartype import beartype
 
 from rotary_embedding_torch import RotaryEmbedding
@@ -15,9 +16,9 @@ from rotary_embedding_torch import RotaryEmbedding
 from einops import rearrange, pack, unpack
 from einops.layers.torch import Rearrange
 
+from hyper_connections import get_init_and_expand_reduce_stream_functions
+
 # helper functions
-
-
 def exists(val):
     return val is not None
 
@@ -35,8 +36,6 @@ def unpack_one(t, ps, pattern):
 
 
 # norm
-
-
 def l2norm(t):
     return F.normalize(t, dim=-1, p=2)
 
@@ -53,8 +52,6 @@ class RMSNorm(Module):
 
 
 # attention
-
-
 class FeedForward(Module):
     def __init__(self, dim, mult=4, dropout=0.0):
         super().__init__()
@@ -66,7 +63,7 @@ class FeedForward(Module):
 
 
 class Attention(Module):
-    def __init__(self, dim, heads=8, dim_head=64, dropout=0.0, rotary_embed=None, flash=True):
+    def __init__(self, dim, heads=8, dim_head=64, dropout=0.0, rotary_embed=None, flash=True, learned_value_residual_mix=False):
         super().__init__()
         self.heads = heads
         self.scale = dim_head**-0.5
@@ -79,14 +76,25 @@ class Attention(Module):
         self.norm = RMSNorm(dim)
         self.to_qkv = nn.Linear(dim, dim_inner * 3, bias=False)
 
+        self.to_value_residual_mix = nn.Linear(dim, heads) if learned_value_residual_mix else None
+
         self.to_gates = nn.Linear(dim, heads)
 
         self.to_out = nn.Sequential(nn.Linear(dim_inner, dim, bias=False), nn.Dropout(dropout))
 
-    def forward(self, x):
+    def forward(self, x, value_residual=None):
         x = self.norm(x)
 
         q, k, v = rearrange(self.to_qkv(x), "b n (qkv h d) -> qkv b h n d", qkv=3, h=self.heads)
+
+        orig_v = v
+
+        if exists(self.to_value_residual_mix):
+            mix = self.to_value_residual_mix(x)
+            mix = rearrange(mix, 'b n h -> b h n 1').sigmoid()
+
+            assert exists(value_residual)
+            v = v.lerp(value_residual, mix)
 
         if exists(self.rotary_embed):
             q = self.rotary_embed.rotate_queries_or_keys(q)
@@ -98,7 +106,8 @@ class Attention(Module):
         out = out * rearrange(gates, "b n h -> b h n 1").sigmoid()
 
         out = rearrange(out, "b h n d -> b n (h d)")
-        return self.to_out(out)
+
+        return self.to_out(out), orig_v
 
 
 class LinearAttention(Module):
@@ -134,35 +143,38 @@ class LinearAttention(Module):
 
 
 class Transformer(Module):
-    def __init__(self, *, dim, depth, dim_head=64, heads=8, attn_dropout=0.0, ff_dropout=0.0, ff_mult=4, norm_output=True, rotary_embed=None, flash_attn=True, linear_attn=False):
+    def __init__(self, *, dim, depth, dim_head=64, heads=8, attn_dropout=0.0, ff_dropout=0.0, ff_mult=4, norm_output=True, rotary_embed=None, flash_attn=True, add_value_residual=False, num_residual_streams=1):
         super().__init__()
         self.layers = ModuleList([])
 
-        for _ in range(depth):
-            if linear_attn:
-                attn = LinearAttention(dim=dim, dim_head=dim_head, heads=heads, dropout=attn_dropout, flash=flash_attn)
-            else:
-                attn = Attention(dim=dim, dim_head=dim_head, heads=heads, dropout=attn_dropout, rotary_embed=rotary_embed, flash=flash_attn)
+        init_hyper_conn, *_ = get_init_and_expand_reduce_stream_functions(num_residual_streams, disable=num_residual_streams == 1)
 
-            self.layers.append(ModuleList([attn, FeedForward(dim=dim, mult=ff_mult, dropout=ff_dropout)]))
+        for _ in range(depth):
+            self.layers.append(ModuleList([
+                init_hyper_conn(dim=dim, branch=Attention(dim=dim, dim_head=dim_head, heads=heads, dropout=attn_dropout, rotary_embed=rotary_embed, flash=flash_attn, learned_value_residual_mix=add_value_residual),
+                init_hyper_conn(dim=dim, branch=FeedForward(dim=dim, mult=ff_mult, dropout=ff_dropout)
+            ]))
 
         self.norm = RMSNorm(dim) if norm_output else nn.Identity()
 
-    def forward(self, x):
+    def forward(self, x, value_residual=None):
+
+        first_values = None
 
         for attn, ff in self.layers:
-            x = attn(x) + x
-            x = ff(x) + x
+            x, next_values = attn(x, value_residual=value_residual)
 
-        return self.norm(x)
+            first_values = default(first_values, next_values)
+
+            x = ff(x)
+
+        return self.norm(x), first_values
 
 
 # bandsplit module
-
-
 class BandSplit(Module):
     @beartype
-    def __init__(self, dim, dim_inputs: Tuple[int, ...]):
+    def __init__(self, dim, dim_inputs: tuple[int, ...]):
         super().__init__()
         self.dim_inputs = dim_inputs
         self.to_features = ModuleList([])
@@ -204,7 +216,7 @@ def MLP(dim_in, dim_out, dim_hidden=None, depth=1, activation=nn.Tanh):
 
 class MaskEstimator(Module):
     @beartype
-    def __init__(self, dim, dim_inputs: Tuple[int, ...], depth, mlp_expansion_factor=4):
+    def __init__(self, dim, dim_inputs: tuple[int, ...], depth, mlp_expansion_factor=4):
         super().__init__()
         self.dim_inputs = dim_inputs
         self.to_freqs = ModuleList([])
@@ -230,7 +242,6 @@ class MaskEstimator(Module):
 
 
 # main class
-
 DEFAULT_FREQS_PER_BANDS = (
     2,
     2,
@@ -310,23 +321,24 @@ class BSRoformer(Module):
         time_transformer_depth=2,
         freq_transformer_depth=2,
         linear_transformer_depth=0,
-        freqs_per_bands: Tuple[int, ...] = DEFAULT_FREQS_PER_BANDS,
+        freqs_per_bands: tuple[int, ...] = DEFAULT_FREQS_PER_BANDS,
         # in the paper, they divide into ~60 bands, test with 1 for starters
         dim_head=64,
         heads=8,
         attn_dropout=0.0,
         ff_dropout=0.0,
         flash_attn=True,
+        num_residual_streams = 4, # set to 1. to disable hyper connections
         dim_freqs_in=1025,
         stft_n_fft=2048,
         stft_hop_length=512,
         # 10ms at 44100Hz, from sections 4.1, 4.4 in the paper - @faroit recommends // 2 or // 4 for better reconstruction
         stft_win_length=2048,
         stft_normalized=False,
-        stft_window_fn: Optional[Callable] = None,
+        stft_window_fn: Callable | None = None,
         mask_estimator_depth=2,
         multi_stft_resolution_loss_weight=1.0,
-        multi_stft_resolutions_window_sizes: Tuple[int, ...] = (4096, 2048, 1024, 512, 256),
+        multi_stft_resolutions_window_sizes: tuple[int, ...] = (4096, 2048, 1024, 512, 256),
         multi_stft_hop_size=147,
         multi_stft_normalized=False,
         multi_stft_window_fn: Callable = torch.hann_window,
@@ -337,20 +349,22 @@ class BSRoformer(Module):
         self.audio_channels = 2 if stereo else 1
         self.num_stems = num_stems
 
+        _, self.expand_stream, self.reduce_stream = get_init_and_expand_reduce_stream_functions(num_residual_streams, disable=num_residual_streams == 1)
+
         self.layers = ModuleList([])
 
-        transformer_kwargs = dict(dim=dim, heads=heads, dim_head=dim_head, attn_dropout=attn_dropout, ff_dropout=ff_dropout, flash_attn=flash_attn, norm_output=False)
+        transformer_kwargs = dict(dim=dim, heads=heads, dim_head=dim_head, attn_dropout=attn_dropout, ff_dropout=ff_dropout, flash_attn=flash_attn, num_residual_streams=num_residual_streams, norm_output=False)
 
         time_rotary_embed = RotaryEmbedding(dim=dim_head)
         freq_rotary_embed = RotaryEmbedding(dim=dim_head)
 
-        for _ in range(depth):
-            tran_modules = []
-            if linear_transformer_depth > 0:
-                tran_modules.append(Transformer(depth=linear_transformer_depth, linear_attn=True, **transformer_kwargs))
-            tran_modules.append(Transformer(depth=time_transformer_depth, rotary_embed=time_rotary_embed, **transformer_kwargs))
-            tran_modules.append(Transformer(depth=freq_transformer_depth, rotary_embed=freq_rotary_embed, **transformer_kwargs))
-            self.layers.append(nn.ModuleList(tran_modules))
+        for layer_index in range(depth):
+            is_first = layer_index == 0
+
+            self.layers.append(nn.ModuleList([
+                Transformer(depth=time_transformer_depth, rotary_embed=time_rotary_embed, add_value_residual=not is_first, **transformer_kwargs),
+                Transformer(depth=freq_transformer_depth, rotary_embed=freq_rotary_embed, add_value_residual=not is_first, **transformer_kwargs)
+            ]))
 
         self.final_norm = RMSNorm(dim)
 
@@ -375,7 +389,6 @@ class BSRoformer(Module):
             self.mask_estimators.append(mask_estimator)
 
         # for the multi-resolution stft loss
-
         self.multi_stft_resolution_loss_weight = multi_stft_resolution_loss_weight
         self.multi_stft_resolutions_window_sizes = multi_stft_resolutions_window_sizes
         self.multi_stft_n_fft = stft_n_fft
@@ -413,7 +426,6 @@ class BSRoformer(Module):
         ), "stereo needs to be set to True if passing in audio signal that is stereo (channel dimension of 2). also need to be False if mono (channel dimension of 1)"
 
         # to stft
-
         raw_audio, batch_audio_channel_packed_shape = pack_one(raw_audio, "* t")
 
         stft_window = self.stft_window_fn().to(device)
@@ -428,8 +440,14 @@ class BSRoformer(Module):
 
         x = self.band_split(x)
 
-        # axial / hierarchical attention
+        # value residuals
+        time_v_residual = None
+        freq_v_residual = None
 
+        # maybe expand residual streams
+        x = self.expand_stream(x)
+
+        # axial / hierarchical attention
         for transformer_block in self.layers:
 
             if len(transformer_block) == 3:
@@ -444,15 +462,22 @@ class BSRoformer(Module):
             x = rearrange(x, "b t f d -> b f t d")
             x, ps = pack([x], "* t d")
 
-            x = time_transformer(x)
+            x, next_time_v_residual = time_transformer(x, value_residual = time_v_residual)
+
+            time_v_residual = default(time_v_residual, next_time_v_residual)
 
             (x,) = unpack(x, ps, "* t d")
             x = rearrange(x, "b f t d -> b t f d")
             x, ps = pack([x], "* f d")
 
-            x = freq_transformer(x)
+            x, next_freq_v_residual = freq_transformer(x, value_residual = freq_v_residual)
+
+            freq_v_residual = default(freq_v_residual, next_freq_v_residual)
 
             (x,) = unpack(x, ps, "* f d")
+
+        # maybe reduce residual streams
+        x = self.reduce_stream(x)
 
         x = self.final_norm(x)
 
@@ -463,18 +488,15 @@ class BSRoformer(Module):
         #     mask = mask.to('cpu')
 
         # modulate frequency representation
-
         stft_repr = rearrange(stft_repr, "b f t c -> b 1 f t c")
 
         # complex number multiplication
-
         stft_repr = torch.view_as_complex(stft_repr)
         mask = torch.view_as_complex(mask)
 
         stft_repr = stft_repr * mask
 
         # istft
-
         stft_repr = rearrange(stft_repr, "b n (f s) t -> (b n s) f t", s=self.audio_channels)
 
         recon_audio = torch.istft(stft_repr.cpu() if x_is_mps else stft_repr, **self.stft_kwargs, window=stft_window.cpu() if x_is_mps else stft_window, return_complex=False).to(device)
@@ -485,7 +507,6 @@ class BSRoformer(Module):
             recon_audio = rearrange(recon_audio, "b 1 s t -> b s t")
 
         # if a target is passed in, calculate loss for learning
-
         if not exists(target):
             return recon_audio
 
