@@ -133,7 +133,7 @@ def main():
         log_level = getattr(logging, args.log_level.upper())
     logger.setLevel(log_level)
 
-    from PolUVR import Separator
+    from PolUVR.separator import Separator
 
     if args.env_info:
         separator = Separator()

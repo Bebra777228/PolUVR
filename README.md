@@ -112,7 +112,7 @@ you can click on the link to open the WebUI.
 You can seamlessly incorporate our pre-built interface into your Gradio applications by using the following import statement:
 
 ```python
-from PolUVR import PolUVR_UI
+from PolUVR.utils import PolUVR_UI
 
 # This function can be integrated into any section of your interface
 PolUVR_UI()
@@ -232,7 +232,7 @@ MDXC Architecture Parameters:
 You can use Audio Separator in your own Python project. Here's a minimal example using the default two stem (Instrumental and Vocals) model:
 
 ```python
-from PolUVR import Separator
+from PolUVR.separator import Separator
 
 # Initialize the Separator class (with optional configuration properties, below)
 separator = Separator()
@@ -253,7 +253,7 @@ You can process multiple files without reloading the model to save time and memo
 You only need to load a model when choosing or changing models. See example below:
 
 ```python
-from PolUVR import Separator
+from PolUVR.separator import Separator
 
 # Initialize the Separator class (with optional configuration properties, below)
 separator = Separator()
@@ -273,7 +273,7 @@ output_files = separator.separate(['audio1.wav', 'audio2.wav', 'audio3.wav'])
 
 You can also specify the path to a folder containing audio files instead of listing the full paths to each of them:
 ```python
-from PolUVR import Separator
+from PolUVR.separator import Separator
 
 # Initialize the Separator class (with optional configuration properties, below)
 separator = Separator()

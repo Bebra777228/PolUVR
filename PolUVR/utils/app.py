@@ -7,7 +7,7 @@ import logging
 import subprocess
 import gradio as gr
 
-from PolUVR import Separator
+from PolUVR.separator import Separator
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 use_autocast = device == "cuda"
