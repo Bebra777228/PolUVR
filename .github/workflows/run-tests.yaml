@@ -28,11 +28,6 @@ jobs:
       - name: Install Poetry dependencies (CPU)
         run: poetry install -E cpu
 
-      - name: Install ffmpeg
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg
-
       - name: Run unit tests with coverage
         run: poetry run pytest tests/unit --cov=./ --cov-report=xml
 
@@ -63,11 +58,6 @@ jobs:
 
       - name: Install Poetry dependencies (CPU)
         run: poetry install -E cpu
-
-      - name: Install ffmpeg
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg
 
       - name: Run unit tests with coverage
         run: |
@@ -100,11 +90,6 @@ jobs:
 
       - name: Install Poetry dependencies (CPU)
         run: poetry install -E cpu
-
-      - name: Install ffmpeg
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg
 
       - name: Run unit tests with coverage
         run: poetry run pytest tests/unit --cov=./ --cov-report=xml
