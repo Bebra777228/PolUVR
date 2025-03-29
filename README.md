@@ -3,13 +3,13 @@
 [![PyPI version](https://badge.fury.io/py/PolUVR.svg?icon=si%3Apython)](https://badge.fury.io/py/PolUVR)
 [![Open In Huggingface](https://huggingface.co/datasets/huggingface/badges/resolve/main/open-in-hf-spaces-sm.svg)](https://huggingface.co/spaces/Politrees/PolUVR)
 
-## Overview
+# Overview
 
 **PolUVR** is a Python-based audio separation tool that leverages advanced machine learning models to separate audio tracks into distinct stems, such as vocals, instrumental, drums, bass, and more. Built as a fork of the [python-audio-separator](https://github.com/nomadkaraoke/python-audio-separator), PolUVR offers enhanced usability, hardware acceleration, and a user-friendly Gradio interface.
 
 ---
 
-## Key Features
+# Key Features
 
 - **Audio Separation:** Extract vocals, instrumental, drums, bass, and other stems.
 - **Hardware Acceleration:** Supports CUDA (Nvidia GPUs) and CoreML (Apple Silicon).
@@ -18,7 +18,7 @@
 
 ---
 
-## Installation 🛠️
+# Installation 🛠️
 
 ### Hardware Acceleration Options
 
@@ -45,10 +45,10 @@ The log should show: `FFmpeg installed`
 
 If FFmpeg is missing, install it using the following commands:
 
-| **OS**            | **Command**                                                                                       |
-|-------------------|---------------------------------------------------------------------------------------------------|
-| **Debian/Ubuntu** | `apt-get update; apt-get install -y ffmpeg`                                                       |
-| **macOS**         | `brew update; brew install ffmpeg`                                                                |
+| **OS**            | **Command**                                                                                                     |
+|-------------------|-----------------------------------------------------------------------------------------------------------------|
+| **Debian/Ubuntu** | `apt-get update; apt-get install -y ffmpeg`                                                                     |
+| **macOS**         | `brew update; brew install ffmpeg`                                                                              |
 | **Windows**       | Follow this guide: [Install FFmpeg on Windows](https://www.geeksforgeeks.org/how-to-install-ffmpeg-on-windows/) |
 
 If you cloned the repository, you can install FFmpeg with:
@@ -85,9 +85,9 @@ python -m pip install ort-nightly-gpu --index-url=https://aiinfra.pkgs.visualstu
 
 ---
 
-## Usage 🚀
+# Usage 🚀
 
-### Gradio Interface
+## Gradio Interface
 
 To launch the Gradio interface, use:
 ```sh
@@ -108,9 +108,33 @@ Running on public URL: https://28425b3eb261b9ddc6.gradio.live
 ```
 you can click on the link to open the WebUI.
 
+### Integrate Our Interface into Your Gradio Projects  
+You can seamlessly incorporate our pre-built interface into your Gradio applications by using the following import statement:
+
+```python
+from PolUVR import PolUVR_UI
+
+# This function can be integrated into any section of your interface
+PolUVR_UI()
+```
+
+The `PolUVR_UI` function supports two optional parameters:
+- **`default_model_file_dir`:** (Optional) Directory path for downloading models. `Default: /tmp/PolUVR-models/`
+- **`default_output_dir`:** (Optional) Directory path for saving separation results. `Default: output`
+
+The default parameter values are configured as follows:
+```python
+PolUVR_UI(default_model_file_dir="/tmp/PolUVR-models/", default_output_dir="output")
+```
+
+To customize storage locations for model files and output results according to your project structure, specify alternative default paths:
+```python
+PolUVR_UI("UVR_models", "separation_results")
+```
+
 ---
 
-### Command Line Interface (CLI)
+## Command Line Interface (CLI)
 
 You can use Audio Separator via the command line, for example:
 
@@ -203,12 +227,12 @@ MDXC Architecture Parameters:
 
 ---
 
-### As a Dependency in a Python Project
+## As a Dependency in a Python Project
 
 You can use Audio Separator in your own Python project. Here's a minimal example using the default two stem (Instrumental and Vocals) model:
 
 ```python
-from PolUVR.separator import Separator
+from PolUVR import Separator
 
 # Initialize the Separator class (with optional configuration properties, below)
 separator = Separator()
@@ -222,14 +246,14 @@ output_files = separator.separate('audio1.wav')
 print(f"Separation complete! Output file(s): {' '.join(output_files)}")
 ```
 
-#### Batch processing and processing with multiple models
+### Batch processing and processing with multiple models
 
 You can process multiple files without reloading the model to save time and memory.
 
 You only need to load a model when choosing or changing models. See example below:
 
 ```python
-from PolUVR.separator import Separator
+from PolUVR import Separator
 
 # Initialize the Separator class (with optional configuration properties, below)
 separator = Separator()
@@ -249,7 +273,7 @@ output_files = separator.separate(['audio1.wav', 'audio2.wav', 'audio3.wav'])
 
 You can also specify the path to a folder containing audio files instead of listing the full paths to each of them:
 ```python
-from PolUVR.separator import Separator
+from PolUVR import Separator
 
 # Initialize the Separator class (with optional configuration properties, below)
 separator = Separator()
@@ -289,7 +313,7 @@ output_files = separator.separate('path/to/audio_directory')
 
 ---
 
-## Developing Locally
+# Developing Locally
 
 ### Prerequisites
 
@@ -344,12 +368,12 @@ conda deactivate
 
 ---
 
-## Contributing 🤝
+# Contributing 🤝
 
 Contributions are welcome! Fork the repository, make your changes, and submit a pull request. For major changes, please open an issue first to discuss what you would like to add.
 
 ---
 
-## Acknowledgments
+# Acknowledgments
 
 This project is a fork of the original [python-audio-separator](https://github.com/nomadkaraoke/python-audio-separator) repository. Special thanks to the contributors of the original project for their foundational work.

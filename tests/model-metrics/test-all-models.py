@@ -3,7 +3,7 @@ import os
 import museval
 import numpy as np
 import soundfile as sf
-from PolUVR.separator import Separator
+from PolUVR import Separator
 import json
 import logging
 import musdb

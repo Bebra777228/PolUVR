@@ -7,7 +7,7 @@ import logging
 import subprocess
 import gradio as gr
 
-from PolUVR.separator import Separator
+from PolUVR import Separator
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 use_autocast = device == "cuda"
@@ -424,7 +424,7 @@ def show_hide_params(param):
     """Updates the visibility of a parameter based on the checkbox state."""
     return gr.update(visible=param)
 
-def PolUVR(default_model_file_dir="/tmp/PolUVR-models/", default_output_dir="output"):
+def PolUVR_UI(default_model_file_dir="/tmp/PolUVR-models/", default_output_dir="output"):
     with gr.Tab("Roformer"):
         with gr.Group():
             with gr.Row():
