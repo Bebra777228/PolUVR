@@ -1,4 +1,4 @@
-name: run-unit-tests
+name: run-tests
 
 on:
   push:
@@ -29,7 +29,7 @@ jobs:
         run: poetry install -E cpu
 
       - name: Run unit tests with coverage
-        run: poetry run pytest tests/unit
+        run: poetry run pytest tests/
 
   test-macos:
     runs-on: macos-latest
@@ -55,8 +55,7 @@ jobs:
         run: poetry install -E cpu
 
       - name: Run unit tests with coverage
-        run: |
-          poetry run pytest tests/unit
+        run: poetry run pytest tests/
 
   test-windows:
     runs-on: windows-latest
@@ -82,4 +81,4 @@ jobs:
         run: poetry install -E cpu
 
       - name: Run unit tests with coverage
-        run: poetry run pytest tests/unit
+        run: poetry run pytest tests/
