@@ -236,13 +236,14 @@ def test_cli_use_autocast_argument(common_expected_args):
             main()
 
             # Update expected args for this specific test
-            common_expected_args["use_autocast"] = True
+            expected_args = common_expected_args.copy()
+            expected_args["use_autocast"] = True
 
             # Assertions
-            mock_separator.assert_called_once_with(**common_expected_args)
+            mock_separator.assert_called_once_with(**expected_args)
 
 
-# Test using custom_output_names argument
+# Test using custom_output_names arguments
 def test_cli_custom_output_names_argument(common_expected_args):
     custom_names = {
         "Vocals": "vocals_output",
