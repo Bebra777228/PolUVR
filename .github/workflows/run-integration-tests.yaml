@@ -6,7 +6,7 @@ on:
 
 jobs:
   integration-test:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     env:
       POLUVR_MODEL_DIR: ${{ github.workspace }}/models
 
